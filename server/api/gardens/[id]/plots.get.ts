@@ -1,0 +1,24 @@
+import { asc, eq } from 'drizzle-orm'
+import { cropTypes, gardens, plantings, plots } from '~/db/schema'
+import { enrichPlanting } from '~/server/utils/planting'
+import { notFound } from '~/server/utils/http'
+import { useDb } from '~/server/db'
+
+export default defineEventHandler(async (event) => {
+  const gardenId = getRouterParam(event, 'id')!
+  const db = useDb()
+  const [garden] = await db.select().from(gardens).where(eq(gardens.id, gardenId)).limit(1)
+  if (!garden) notFound('Horta não encontrada.')
+  const rows = await db.select({ plot: plots, planting: plantings, cropType: cropTypes })
+    .from(plots)
+    .leftJoin(plantings, eq(plantings.plotId, plots.id))
+    .leftJoin(cropTypes, eq(plantings.cropTypeId, cropTypes.id))
+    .where(eq(plots.gardenId, gardenId))
+    .orderBy(asc(plots.row), asc(plots.column))
+  const result = []
+  for (const row of rows) {
+    const planting = row.planting && row.cropType ? await enrichPlanting(db, row.planting, row.cropType) : null
+    result.push({ ...row.plot, planting })
+  }
+  return result
+})

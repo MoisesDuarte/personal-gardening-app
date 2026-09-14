@@ -1,0 +1,16 @@
+<script setup lang="ts">
+import type { Plot } from '~/types/domain'
+const route = useRoute()
+const { garden, plots, cropTypes, loading, error, loadGarden, loadCropTypes } = useGarden()
+const selectedPlot = ref<Plot | null>(null)
+const activeFilter = ref('all')
+const activeCount = computed(() => plots.value.filter((plot) => plot.planting).length)
+const needsCare = computed(() => plots.value.filter((plot) => ['NEEDS_WATERING', 'NEEDS_FERTILIZING'].includes(plot.planting?.state || '')).length)
+const closePanel = () => { selectedPlot.value = null }
+async function refresh() { await loadGarden(String(route.params.id)); closePanel() }
+onMounted(async () => { await Promise.all([loadGarden(String(route.params.id)), loadCropTypes()]) })
+</script>
+
+<template>
+  <main class="app-shell garden-page"><header class="topbar"><NuxtLink class="brand" to="/"><span class="brand-mark">✳</span><span>cultiva<span>.</span></span></NuxtLink><div class="topbar-right"><NuxtLink class="back-link" to="/">← Dashboard</NuxtLink><span class="avatar">MF</span></div></header><div v-if="loading" class="loading-card">Abrindo sua horta…</div><div v-else-if="garden" class="garden-layout"><section class="garden-main"><div class="garden-heading"><div><span class="eyebrow">MAPA DE CULTIVO</span><h1>{{ garden.name }}</h1><p class="subtitle">{{ garden.rows }} linhas × {{ garden.columns }} colunas <span class="dot-separator">·</span> Atualizado agora</p></div><button class="button button-dark" @click="selectedPlot = plots.find((plot) => !plot.planting) || plots[0] || null">+ Novo plantio</button></div><div class="legend"><button :class="{ active: activeFilter === 'all' }" @click="activeFilter = 'all'"><i class="legend-dot all-dot" /> Todas <span>{{ plots.length }}</span></button><button :class="{ active: activeFilter === 'empty' }" @click="activeFilter = 'empty'"><i class="legend-dot empty-dot" /> Livres <span>{{ plots.filter((p) => !p.planting).length }}</span></button><button :class="{ active: activeFilter === 'NEEDS_WATERING' }" @click="activeFilter = 'NEEDS_WATERING'"><i class="legend-dot water-dot" /> Precisam de cuidado <span>{{ needsCare }}</span></button></div><div class="grid-card"><GardenGrid :rows="garden.rows" :columns="garden.columns" :plots="plots" :filter="activeFilter" @select="selectedPlot = $event" /><div class="grid-caption"><span><i class="tiny-sprout">✳</i> Clique em uma célula para ver detalhes ou plantar</span><span class="grid-count">{{ activeCount }} de {{ plots.length }} espaços ocupados</span></div></div></section><aside class="garden-side"><div class="side-intro"><span class="eyebrow">RESUMO DA HORTA</span><h2>Um espaço vivo.</h2><p>Cada cuidado de hoje é uma colheita mais bonita amanhã.</p></div><div class="side-stat"><span class="card-label">CULTIVOS ATIVOS</span><strong>{{ activeCount }}</strong><div class="stat-track"><i :style="{ width: `${plots.length ? activeCount / plots.length * 100 : 0}%` }" /></div></div><div class="side-tips"><span class="eyebrow">LEMBRETE</span><p>Observe suas plantas de perto. O melhor sinal costuma ser o mais simples.</p><span class="tip-leaf">⌁</span></div></aside></div><p v-else class="form-error">{{ error || 'Horta não encontrada.' }}</p><PlantingPanel :plot="selectedPlot" :crop-types="cropTypes" @close="closePanel" @changed="refresh" /></main>
+</template>
