@@ -1,8 +1,8 @@
 import { relations, sql } from 'drizzle-orm'
 import { integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
 
-export const plantingStatus = pgEnum('planting_status', ['ACTIVE', 'HARVESTED'])
-export const careEventType = pgEnum('care_event_type', ['WATERING', 'FERTILIZING', 'HARVEST'])
+export const plantingStatus = pgEnum('planting_status', ['ACTIVE', 'HARVESTED', 'REMOVED'])
+export const careEventType = pgEnum('care_event_type', ['WATERING', 'FERTILIZING', 'HARVEST', 'REMOVAL'])
 
 export const gardens = pgTable('gardens', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -39,6 +39,7 @@ export const plantings = pgTable('plantings', {
   plantedAt: timestamp('planted_at', { withTimezone: true }).notNull(),
   expectedHarvestAt: timestamp('expected_harvest_at', { withTimezone: true }).notNull(),
   harvestedAt: timestamp('harvested_at', { withTimezone: true }),
+  removedAt: timestamp('removed_at', { withTimezone: true }),
   status: plantingStatus('status').default('ACTIVE').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()

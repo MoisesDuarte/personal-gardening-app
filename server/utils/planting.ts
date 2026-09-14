@@ -1,10 +1,11 @@
-import { and, asc, eq } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 import { careEvents, cropTypes, plantings } from '~/db/schema'
-import { daysSince, nextFertilizingAt, nextWateringAt, plantingState, type CropEvent } from '~/server/domain/crop'
+import { daysSince, daysOverdue, daysUntil, isDue, nextFertilizingAt, nextWateringAt, plantingNeedsCare, plantingState, type CropEvent } from '~/server/domain/crop'
 
 export async function enrichPlanting(db: ReturnType<typeof import('~/server/db').useDb>, planting: typeof plantings.$inferSelect, cropType: typeof cropTypes.$inferSelect, now = new Date()) {
-  const events = await db.select().from(careEvents).where(eq(careEvents.plantingId, planting.id)).orderBy(asc(careEvents.performedAt))
-  const domainEvents: CropEvent[] = events.filter((event) => event.type === 'WATERING' || event.type === 'FERTILIZING').map((event) => ({ type: event.type as CropEvent['type'], performedAt: event.performedAt }))
+  const eventRows = await db.select().from(careEvents).where(eq(careEvents.plantingId, planting.id)).orderBy(desc(careEvents.performedAt), desc(careEvents.createdAt))
+  const events = [...eventRows].reverse()
+  const domainEvents: CropEvent[] = eventRows.filter((event) => event.type === 'WATERING' || event.type === 'FERTILIZING').map((event) => ({ type: event.type as CropEvent['type'], performedAt: event.performedAt }))
   const wateringAt = nextWateringAt(planting.plantedAt, cropType.defaultWateringIntervalDays, domainEvents)
   const fertilizingAt = nextFertilizingAt(planting.plantedAt, cropType.defaultFertilizingIntervalDays, domainEvents)
   return {
@@ -14,7 +15,15 @@ export async function enrichPlanting(db: ReturnType<typeof import('~/server/db')
     ageInDays: daysSince(planting.plantedAt, now),
     nextWateringAt: wateringAt,
     nextFertilizingAt: fertilizingAt,
-    state: plantingState({ plantedAt: planting.plantedAt, expectedHarvestAt: planting.expectedHarvestAt, wateringAt, fertilizingAt, harvestedAt: planting.harvestedAt }, now)
+    wateringOverdueDays: daysOverdue(wateringAt, now),
+    fertilizingOverdueDays: daysOverdue(fertilizingAt, now),
+    wateringDaysUntil: daysUntil(wateringAt, now),
+    fertilizingDaysUntil: daysUntil(fertilizingAt, now),
+    needsWatering: isDue(wateringAt, now),
+    needsFertilizing: isDue(fertilizingAt, now),
+    daysToHarvest: daysUntil(planting.expectedHarvestAt, now),
+    state: plantingState({ plantedAt: planting.plantedAt, expectedHarvestAt: planting.expectedHarvestAt, wateringAt, fertilizingAt, harvestedAt: planting.harvestedAt, removedAt: planting.removedAt }, now),
+    needsCare: plantingNeedsCare({ expectedHarvestAt: planting.expectedHarvestAt, needsWatering: isDue(wateringAt, now), needsFertilizing: isDue(fertilizingAt, now), status: planting.status }, now)
   }
 }
 

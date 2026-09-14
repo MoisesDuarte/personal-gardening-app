@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Garden, Task, UpcomingHarvest } from '~/types/domain'
+import { formatAppDate } from '~/utils/dates'
 const router = useRouter()
 const gardens = ref<Garden[]>([])
 const tasks = ref<Task[]>([])
@@ -8,7 +9,7 @@ const activeCount = ref(0)
 const loading = ref(true)
 const showForm = ref(false)
 const error = ref('')
-const formatDate = (date: string) => new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' }).format(new Date(date)).replace('.', '')
+const formatDate = (date: string) => formatAppDate(date, { day: '2-digit', month: 'short' }).replace('.', '')
 const garden = computed(() => gardens.value[0])
 
 async function load() {

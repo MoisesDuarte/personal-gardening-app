@@ -1,5 +1,5 @@
-CREATE TYPE "planting_status" AS ENUM ('ACTIVE', 'HARVESTED');
-CREATE TYPE "care_event_type" AS ENUM ('WATERING', 'FERTILIZING', 'HARVEST');
+CREATE TYPE "planting_status" AS ENUM ('ACTIVE', 'HARVESTED', 'REMOVED');
+CREATE TYPE "care_event_type" AS ENUM ('WATERING', 'FERTILIZING', 'HARVEST', 'REMOVAL');
 
 CREATE TABLE "gardens" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(), "name" text NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE "plots" (
 CREATE TABLE "plantings" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(), "plot_id" uuid NOT NULL REFERENCES "plots"("id") ON DELETE CASCADE,
   "crop_type_id" uuid NOT NULL REFERENCES "crop_types"("id"), "planted_at" timestamptz NOT NULL,
-  "expected_harvest_at" timestamptz NOT NULL, "harvested_at" timestamptz,
+  "expected_harvest_at" timestamptz NOT NULL, "harvested_at" timestamptz, "removed_at" timestamptz,
   "status" "planting_status" NOT NULL DEFAULT 'ACTIVE',
   "created_at" timestamptz NOT NULL DEFAULT now(), "updated_at" timestamptz NOT NULL DEFAULT now()
 );

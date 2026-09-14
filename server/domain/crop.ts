@@ -1,3 +1,5 @@
+import { calendarDayDifference } from '../../utils/dates'
+
 export type CropRule = {
   defaultHarvestDays: number
   defaultWateringIntervalDays: number
@@ -6,18 +8,12 @@ export type CropRule = {
 
 export type CropEvent = { type: 'WATERING' | 'FERTILIZING'; performedAt: Date }
 
-const DAY_MS = 24 * 60 * 60 * 1000
-
 export function addDays(date: Date, days: number) {
-  return new Date(date.getTime() + days * DAY_MS)
-}
-
-export function startOfDay(date: Date) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
+  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000)
 }
 
 export function daysSince(date: Date, now = new Date()) {
-  return Math.max(0, Math.floor((startOfDay(now).getTime() - startOfDay(date).getTime()) / DAY_MS))
+  return Math.max(0, calendarDayDifference(now, date))
 }
 
 export function expectedHarvestAt(plantedAt: Date, rule: CropRule) {
@@ -37,19 +33,33 @@ export function nextFertilizingAt(plantedAt: Date, intervalDays: number, events:
 }
 
 export function isDue(date: Date, now = new Date()) {
-  return startOfDay(date).getTime() <= startOfDay(now).getTime()
+  return calendarDayDifference(date, now) <= 0
+}
+
+export function daysOverdue(date: Date, now = new Date()) {
+  return Math.max(0, -calendarDayDifference(date, now))
+}
+
+export function daysUntil(date: Date, now = new Date()) {
+  return calendarDayDifference(date, now)
 }
 
 export function isNearHarvest(date: Date, now = new Date(), thresholdDays = 7) {
-  const days = Math.ceil((startOfDay(date).getTime() - startOfDay(now).getTime()) / DAY_MS)
+  const days = calendarDayDifference(date, now)
   return days >= 0 && days <= thresholdDays
 }
 
-export function plantingState(input: { plantedAt: Date; expectedHarvestAt: Date; wateringAt: Date; fertilizingAt: Date; harvestedAt?: Date | null }, now = new Date()) {
+export function plantingState(input: { plantedAt: Date; expectedHarvestAt: Date; wateringAt: Date; fertilizingAt: Date; harvestedAt?: Date | null; removedAt?: Date | null }, now = new Date()) {
+  if (input.removedAt) return 'REMOVED' as const
   if (input.harvestedAt) return 'HARVESTED' as const
   if (isDue(input.expectedHarvestAt, now)) return 'READY' as const
   if (isDue(input.wateringAt, now)) return 'NEEDS_WATERING' as const
   if (isDue(input.fertilizingAt, now)) return 'NEEDS_FERTILIZING' as const
   if (isNearHarvest(input.expectedHarvestAt, now)) return 'NEAR_HARVEST' as const
   return 'GROWING' as const
+}
+
+export function plantingNeedsCare(input: { expectedHarvestAt: Date; needsWatering: boolean; needsFertilizing: boolean; status?: 'ACTIVE' | 'HARVESTED' | 'REMOVED' }, now = new Date()) {
+  if (input.status && input.status !== 'ACTIVE') return false
+  return input.needsWatering || input.needsFertilizing || isDue(input.expectedHarvestAt, now) || isNearHarvest(input.expectedHarvestAt, now)
 }
