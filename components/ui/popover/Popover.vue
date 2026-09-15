@@ -12,3 +12,7 @@ const anchorStyle = computed(() => props.position ? { top: `${props.position.top
     <PopoverPortal><PopoverContent :class="contentClass" :aria-labelledby="labelledBy" side="right" align="start" :side-offset="8" :collision-padding="16" sticky="always" :prioritize-position="true"><slot /></PopoverContent></PopoverPortal>
   </PopoverRoot>
 </template>
+
+<style scoped>
+.ui-popover-anchor { position:fixed; width:1px; height:1px; pointer-events:none; }
+</style>

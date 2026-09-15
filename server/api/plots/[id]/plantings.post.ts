@@ -19,8 +19,8 @@ export default defineEventHandler(async (event) => {
   if (!plot) notFound('Célula não encontrada.')
   const [active] = await db.select().from(plantings).where(and(eq(plantings.plotId, plotId), eq(plantings.status, 'ACTIVE'))).limit(1)
   if (active) conflict('Esta célula já possui um plantio ativo.')
-  const [crop] = await db.select().from(cropTypes).where(eq(cropTypes.id, body.data.cropTypeId)).limit(1)
-  if (!crop) badRequest('Cultivo não encontrado.')
+  const [crop] = await db.select().from(cropTypes).where(and(eq(cropTypes.id, body.data.cropTypeId), eq(cropTypes.isActive, true))).limit(1)
+  if (!crop) badRequest('Planta não encontrada ou está inativa.')
   let planting
   const plantedAt = body.data.plantedAt || now
   const effectiveCrop = effectiveCropType(event, crop)

@@ -1,5 +1,5 @@
 import { relations, sql } from 'drizzle-orm'
-import { integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
+import { boolean, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
 
 export const plantingStatus = pgEnum('planting_status', ['ACTIVE', 'HARVESTED', 'REMOVED'])
 export const careEventType = pgEnum('care_event_type', ['WATERING', 'FERTILIZING', 'HARVEST', 'REMOVAL'])
@@ -15,13 +15,17 @@ export const gardens = pgTable('gardens', {
 
 export const cropTypes = pgTable('crop_types', {
   id: uuid('id').defaultRandom().primaryKey(),
-  name: text('name').notNull().unique(),
+  name: text('name').notNull(),
+  emoji: text('emoji').notNull().default('🌱'),
+  isActive: boolean('is_active').notNull().default(true),
   defaultHarvestDays: integer('default_harvest_days').notNull(),
   defaultWateringIntervalDays: integer('default_watering_interval_days').notNull(),
   defaultFertilizingIntervalDays: integer('default_fertilizing_interval_days').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()
-})
+}, (table) => ({
+  nameCaseInsensitive: uniqueIndex('crop_types_name_ci_idx').on(sql`lower(${table.name})`)
+}))
 
 export const plots = pgTable('plots', {
   id: uuid('id').defaultRandom().primaryKey(),

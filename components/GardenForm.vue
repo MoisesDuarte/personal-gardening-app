@@ -32,7 +32,29 @@ async function createGarden() {
         <label>Colunas <input v-model.number="columns" type="number" min="1" max="30" /></label>
       </div>
       <p v-if="error" class="form-error">{{ error }}</p>
-      <div class="garden-form-actions"><button v-if="props.compact" class="button button-outline" type="button" @click="emit('cancel')">Cancelar</button><button class="button button-dark" :disabled="submitting" type="submit">{{ submitting ? 'Criando…' : props.compact ? 'Criar horta' : 'Criar minha horta' }} <span>→</span></button></div>
+      <div class="garden-form-actions"><UiButton v-if="props.compact" variant="outline" type="button" @click="emit('cancel')">Cancelar</UiButton><UiButton :disabled="submitting" type="submit">{{ submitting ? 'Criando…' : props.compact ? 'Criar horta' : 'Criar minha horta' }} <span class="button-arrow">→</span></UiButton></div>
     </form>
   </section>
 </template>
+
+<style scoped>
+.welcome-card { margin-top:15px; padding:56px 65px; border:0; background:#d8f0d9; text-align:left; }
+.welcome-card:not(.garden-form-compact) { display:grid; grid-template-columns:1fr 1fr; gap:75px; }
+.welcome-copy h2 { margin:15px 0; font-size:var(--text-2xl); font-weight:var(--weight-bold); line-height:var(--leading-tight); letter-spacing:-.02em; }
+.welcome-copy h2 em { color:#51955f; font-family:inherit; font-style:italic; font-weight:var(--weight-regular); }
+.welcome-copy p { max-width:410px; color:#5a7960; font-size:var(--text-sm); line-height:var(--leading-relaxed); }
+.garden-form { max-width:420px; align-self:center; }
+.garden-form label { display:block; color:#5d7165; font-size:var(--text-sm); font-weight:var(--weight-medium); }.garden-form input { width:100%; margin-top:8px; padding:13px; border:1px solid #cbd9cc; border-radius:2px; outline:0; background:#fff; color:var(--ink); font-size:var(--text-sm); }
+.garden-form input:focus { border-color:#6aac77; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:15px 0 25px; }
+.garden-form-actions { display:flex; gap:9px; }
+.garden-form-actions .ui-button { flex:1; }
+.garden-form-compact { display:block; margin:0; padding:0; background:transparent; }
+.garden-form-compact .welcome-copy { margin-bottom:22px; }
+.garden-form-compact .welcome-copy h2 { margin:12px 0 8px; font-size:var(--text-2xl); letter-spacing:-.02em; }.garden-form-compact .welcome-copy p { margin:0; font-size:var(--text-sm); line-height:var(--leading-relaxed); }
+
+@media (max-width:850px) {
+  .welcome-card:not(.garden-form-compact) { grid-template-columns:1fr; gap:25px; padding:35px 25px; }
+  .welcome-copy h2 { font-size:var(--text-2xl); }
+}
+</style>

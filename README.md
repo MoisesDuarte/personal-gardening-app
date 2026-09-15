@@ -89,7 +89,7 @@ Não há scripts de lint ou de verificação de tipos no `package.json` atual.
 - Mantém uma lista separada de plantios concluídos por colheita ou remoção.
 - Permite abrir os detalhes de cada plantio concluído.
 
-Os cultivos inseridos pelo seed são `Alface` e `Cenoura`, com parâmetros padrão de ciclo, irrigação e adubação. A tabela `crop_types` aceita outros tipos, mas não existe atualmente uma tela administrativa para cadastrá-los.
+Os cultivos inseridos pelo seed são `Alface` e `Cenoura`, com parâmetros padrão de ciclo, irrigação e adubação. A tela `Plantas` permite administrar outros tipos, seus emojis e o status ativo/inativo.
 
 ## Regras de domínio
 
@@ -97,6 +97,7 @@ Os cultivos inseridos pelo seed são `Alface` e `Cenoura`, com parâmetros padr�
 - A próxima irrigação é calculada a partir da data do plantio ou do último evento de irrigação.
 - A próxima adubação segue a mesma regra, usando o último evento de adubação.
 - A previsão de colheita é derivada da data do plantio e do ciclo do cultivo.
+- Os parâmetros do tipo de planta são a referência atual dos cálculos: editar um `CropType` pode recalcular as próximas datas de plantios ativos e a exibição derivada do histórico; a tela pede confirmação quando existem plantios ativos.
 - As tarefas são derivadas sob demanda; não existe uma tabela de tarefas futuras.
 - Um plantio pode estar em crescimento, perto da colheita, pronto para colher, precisando irrigar ou precisando adubar. Plantios encerrados ficam com status `HARVESTED` ou `REMOVED`.
 - As datas de calendário e os rótulos relativos são calculados no fuso `America/Sao_Paulo`.
@@ -140,7 +141,7 @@ O schema em `db/schema.ts` contém:
 
 - `gardens`: nome e dimensões da horta;
 - `plots`: células geradas ao criar uma horta, com posição única dentro dela;
-- `crop_types`: nome e intervalos padrão de colheita, irrigação e adubação;
+- `crop_types`: nome, emoji, status e intervalos padrão de colheita, irrigação e adubação;
 - `plantings`: ciclo de um cultivo em uma célula, com status `ACTIVE`, `HARVESTED` ou `REMOVED`;
 - `care_events`: eventos de irrigação, adubação, colheita e remoção.
 
@@ -160,6 +161,12 @@ As rotas públicas implementadas são:
 | `GET` | `/api/gardens/:id/plots` | Busca células e plantios ativos enriquecidos. |
 | `GET` | `/api/gardens/:id/plantings/history` | Lista plantios colhidos ou removidos. |
 | `GET` | `/api/crop-types` | Lista tipos de cultivo. |
+| `GET` | `/api/dashboard` | Resumo operacional global, atenção e resumo das hortas. |
+| `GET` | `/api/plantings/history` | Lista cultivos concluídos de todas as hortas. |
+| `POST` | `/api/crop-types` | Cria um tipo de cultivo. |
+| `PATCH` | `/api/crop-types/:id` | Atualiza nome, emoji ou parâmetros. |
+| `POST` | `/api/crop-types/:id/deactivate` | Desativa sem apagar referências ou histórico. |
+| `POST` | `/api/crop-types/:id/reactivate` | Reativa para novos plantios. |
 | `GET` | `/api/tasks/today` | Calcula tarefas e próximas colheitas. |
 | `POST` | `/api/plots/:id/plantings` | Cria um plantio em uma célula livre. |
 | `GET` | `/api/plantings/:id` | Busca um plantio enriquecido. |

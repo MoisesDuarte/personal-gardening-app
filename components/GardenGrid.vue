@@ -16,3 +16,14 @@ const isVisible = (plot: Plot) => !props.filter || props.filter === 'all' || (pr
     </template>
   </div>
 </template>
+
+<style scoped>
+.garden-grid-wrap { --columns:8; display:grid; min-width:max-content; grid-template-columns:36px repeat(var(--columns), minmax(132px, 1fr)); gap:6px; }
+.grid-corner { width:36px; }
+.grid-axis { padding:0 0 5px; color:#7d8d83; text-align:center; font-family:var(--font-mono); font-size:var(--text-xs); font-variant-numeric:tabular-nums; line-height:var(--leading-normal); }
+.row-axis { display:grid; place-items:center; padding:0; }
+
+@media (max-width:720px) {
+  .garden-grid-wrap { grid-template-columns:32px repeat(var(--columns), minmax(132px, 1fr)); gap:6px; }
+}
+</style>

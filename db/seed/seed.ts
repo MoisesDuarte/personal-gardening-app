@@ -5,9 +5,10 @@ await client.connect()
 
 // Valores aproximados para validação do MVP; futuramente podem ser configuráveis por família/cultivo.
 await client.query(`
-  INSERT INTO crop_types (name, default_harvest_days, default_watering_interval_days, default_fertilizing_interval_days)
-  VALUES ('Alface', 45, 2, 14), ('Cenoura', 75, 3, 21)
-  ON CONFLICT (name) DO UPDATE SET
+  INSERT INTO crop_types (name, emoji, is_active, default_harvest_days, default_watering_interval_days, default_fertilizing_interval_days)
+  VALUES ('Alface', '🥬', true, 45, 2, 14), ('Cenoura', '🥕', true, 75, 3, 21)
+  ON CONFLICT (lower(name)) DO UPDATE SET
+    emoji = EXCLUDED.emoji,
     default_harvest_days = EXCLUDED.default_harvest_days,
     default_watering_interval_days = EXCLUDED.default_watering_interval_days,
     default_fertilizing_interval_days = EXCLUDED.default_fertilizing_interval_days

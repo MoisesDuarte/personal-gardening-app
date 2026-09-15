@@ -12,3 +12,12 @@ const model = defineModel<'all' | 'empty' | 'NEEDS_WATERING'>({ default: 'all' }
     </UiToggleGroup>
   </div>
 </template>
+
+<style scoped>
+.garden-filters { margin-bottom:12px; }
+.garden-filters :deep(.ui-toggle-group) { width:max-content; }
+@media (max-width:720px) {
+  .garden-filters { margin-bottom:14px; }
+  .garden-filters :deep(.ui-toggle-group) { width:100%; }
+}
+</style>
