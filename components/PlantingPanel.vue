@@ -2,7 +2,7 @@
 import type { CropType, Planting, Plot } from '~/types/domain'
 import { formatAppDate, relativeDayLabel } from '~/utils/dates'
 
-const props = defineProps<{ plot: Plot | null; cropTypes: CropType[]; position?: { top: number; left: number } }>()
+const props = defineProps<{ plot: Plot | null; cropTypes: CropType[]; position?: { top: number; left: number }; historyOpen?: boolean }>()
 const emit = defineEmits<{ close: []; changed: [action: 'WATERING' | 'FERTILIZING' | 'HARVEST' | 'REMOVAL', planting: Planting]; sync: [plotId: string]; history: [planting: NonNullable<Plot['planting']>] }>()
 const planting = computed(() => props.plot?.planting || null)
 const selectedCrop = ref('')
@@ -16,7 +16,7 @@ const stateLabel = (state: string) => ({ READY: 'Pronta para colher', NEAR_HARVE
 const emoji = computed(() => planting.value?.cropType.name === 'Cenoura' ? '🥕' : planting.value?.cropType.name === 'Alface' ? '🥬' : '🌱')
 const positionStyle = computed(() => props.position ? { top: `${props.position.top}px`, left: `${props.position.left}px` } : undefined)
 
-function onKeydown(event: KeyboardEvent) { if (event.key === 'Escape') emit('close') }
+function onKeydown(event: KeyboardEvent) { if (event.key === 'Escape' && !event.defaultPrevented && !props.historyOpen) emit('close') }
 async function plant() {
   busy.value = true; error.value = ''
   try { const created = await $fetch<Planting>(`/api/plots/${props.plot!.id}/plantings`, { method: 'POST', body: { cropTypeId: selectedCrop.value, plantedAt: new Date(`${plantedAt.value}T12:00:00Z`) } }); success('Plantio registrado', `A célula ${String.fromCharCode(64 + props.plot!.row)}${props.plot!.column} está em acompanhamento.`); emit('changed', 'WATERING', created) }
@@ -70,9 +70,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <div class="popover-title-row"><h2 id="planting-popover-title"><span aria-hidden="true">{{ emoji }}</span> {{ planting.cropType.name }}</h2><span class="state-pill" :class="`pill-${planting.state.toLowerCase()}`">{{ stateLabel(planting.state) }}</span></div>
         <p class="muted">Plantada em {{ formatDate(planting.plantedAt) }} · {{ planting.ageInDays }} dias de vida</p>
         <div class="popover-alerts" aria-live="polite">
-          <div :class="{ overdue: planting.wateringDaysUntil < 0 }"><span>💧 <strong>Próxima irrigação</strong></span><b>{{ relativeDayLabel(planting.wateringDaysUntil) }}</b></div>
-          <div :class="{ overdue: planting.fertilizingDaysUntil < 0 }"><span>🌱 <strong>Próxima adubação</strong></span><b>{{ relativeDayLabel(planting.fertilizingDaysUntil) }}</b></div>
-          <div><span>🧺 <strong>Colheita prevista</strong></span><b>{{ planting.daysToHarvest < 0 ? 'Pronta para colher' : relativeDayLabel(planting.daysToHarvest) }}</b></div>
+          <div :class="{ overdue: planting.wateringDaysUntil < 0 }"><span>💧 <strong>Próxima irrigação</strong></span><b><span>{{ formatDate(planting.nextWateringAt) }}</span><small>{{ relativeDayLabel(planting.wateringDaysUntil) }}</small></b></div>
+          <div :class="{ overdue: planting.fertilizingDaysUntil < 0 }"><span>🌱 <strong>Próxima adubação</strong></span><b><span>{{ formatDate(planting.nextFertilizingAt) }}</span><small>{{ relativeDayLabel(planting.fertilizingDaysUntil) }}</small></b></div>
+          <div><span>🧺 <strong>Colheita prevista</strong></span><b><span>{{ formatDate(planting.expectedHarvestAt) }}</span><small>{{ planting.daysToHarvest < 0 ? 'Pronta para colher' : relativeDayLabel(planting.daysToHarvest) }}</small></b></div>
         </div>
         <div class="popover-actions"><UiButton class="action-button" :variant="planting.needsWatering ? 'default' : 'outline'" :disabled="busy" @click="care('WATERING')">{{ busy ? '⟳ Registrando…' : '💧 Registrar irrigação' }}</UiButton><UiButton class="action-button" variant="outline" :disabled="busy" @click="care('FERTILIZING')">{{ busy ? '⟳ Registrando…' : '🌱 Registrar adubação' }}</UiButton><UiButton class="action-button harvest-button" variant="outline" :disabled="busy" @click="care('HARVEST')">🧺 Registrar colheita</UiButton></div>
         <p v-if="error" class="form-error">{{ error }}</p>

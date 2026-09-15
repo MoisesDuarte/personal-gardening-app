@@ -2,8 +2,8 @@ import { desc, eq } from 'drizzle-orm'
 import { careEvents, cropTypes, plantings } from '~/db/schema'
 import { daysSince, daysOverdue, daysUntil, expectedHarvestAt, isDue, nextFertilizingAt, nextWateringAt, plantingNeedsCare, plantingState, type CropEvent } from '~/server/domain/crop'
 
-export async function enrichPlanting(db: ReturnType<typeof import('~/server/db').useDb>, planting: typeof plantings.$inferSelect, cropType: typeof cropTypes.$inferSelect, now = new Date()) {
-  const eventRows = await db.select().from(careEvents).where(eq(careEvents.plantingId, planting.id)).orderBy(desc(careEvents.performedAt), desc(careEvents.createdAt))
+export async function enrichPlanting(db: ReturnType<typeof import('~/server/db').useDb>, planting: typeof plantings.$inferSelect, cropType: typeof cropTypes.$inferSelect, now = new Date(), providedEvents?: typeof careEvents.$inferSelect[]) {
+  const eventRows = providedEvents || await db.select().from(careEvents).where(eq(careEvents.plantingId, planting.id)).orderBy(desc(careEvents.performedAt), desc(careEvents.createdAt))
   const events = [...eventRows].reverse()
   const domainEvents: CropEvent[] = eventRows.filter((event) => event.type === 'WATERING' || event.type === 'FERTILIZING').map((event) => ({ type: event.type as CropEvent['type'], performedAt: event.performedAt }))
   const wateringAt = nextWateringAt(planting.plantedAt, cropType.defaultWateringIntervalDays, domainEvents)

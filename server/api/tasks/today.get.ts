@@ -26,5 +26,9 @@ export default defineEventHandler(async (event) => {
     return items
   })
   const upcomingHarvests = enriched.filter((record) => isNearHarvest(record.planting.expectedHarvestAt, now) || isDue(record.planting.expectedHarvestAt, now)).map((record) => ({ plantingId: record.planting.id, cropName: record.cropType.name, expectedHarvestAt: record.planting.expectedHarvestAt, plot: record.plot, garden: record.garden }))
-  return { activeCount: enriched.length, tasks, upcomingHarvests }
+  const activeCountByGarden = enriched.reduce<Record<string, number>>((counts, record) => {
+    counts[record.garden.id] = (counts[record.garden.id] || 0) + 1
+    return counts
+  }, {})
+  return { activeCount: enriched.length, activeCountByGarden, tasks, upcomingHarvests }
 })

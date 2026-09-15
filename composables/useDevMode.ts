@@ -12,7 +12,7 @@ export function useDevMode() {
   const expanded = useState('dev-expanded', () => true)
   const revision = useState('dev-revision', () => 0)
 
-  function setContext(gardenId: string, plotId: string) {
+  function setContext(gardenId: string, plotId: string | null = null) {
     selectedGardenId.value = gardenId
     selectedPlotId.value = plotId
   }

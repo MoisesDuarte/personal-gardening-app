@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const emit = defineEmits<{ created: [id: string] }>()
+const props = defineProps<{ compact?: boolean }>()
+const emit = defineEmits<{ created: [id: string]; cancel: [] }>()
 const name = ref('Horta do quintal')
 const rows = ref(5)
 const columns = ref(8)
@@ -18,11 +19,11 @@ async function createGarden() {
 </script>
 
 <template>
-  <section class="welcome-card">
+  <section class="welcome-card" :class="{ 'garden-form-compact': props.compact }">
     <div class="welcome-copy">
-      <span class="eyebrow">PRIMEIRO PASSO</span>
-      <h2>Comece desenhando<br><em>sua horta</em></h2>
-      <p>Dê um nome e escolha o tamanho da sua área de cultivo. Você poderá preencher cada espaço ao seu ritmo.</p>
+      <span class="eyebrow">{{ props.compact ? 'NOVA HORTA' : 'PRIMEIRO PASSO' }}</span>
+      <h2 v-if="props.compact">Crie uma nova horta</h2><h2 v-else>Comece desenhando<br><em>sua horta</em></h2>
+      <p>{{ props.compact ? 'Dê um nome e escolha o tamanho desta nova área de cultivo.' : 'Dê um nome e escolha o tamanho da sua área de cultivo. Você poderá preencher cada espaço ao seu ritmo.' }}</p>
     </div>
     <form class="garden-form" @submit.prevent="createGarden">
       <label>Nome da horta <input v-model="name" placeholder="Ex.: Horta do quintal" maxlength="80" /></label>
@@ -31,7 +32,7 @@ async function createGarden() {
         <label>Colunas <input v-model.number="columns" type="number" min="1" max="30" /></label>
       </div>
       <p v-if="error" class="form-error">{{ error }}</p>
-      <button class="button button-dark" :disabled="submitting" type="submit">{{ submitting ? 'Criando…' : 'Criar minha horta' }} <span>→</span></button>
+      <div class="garden-form-actions"><button v-if="props.compact" class="button button-outline" type="button" @click="emit('cancel')">Cancelar</button><button class="button button-dark" :disabled="submitting" type="submit">{{ submitting ? 'Criando…' : props.compact ? 'Criar horta' : 'Criar minha horta' }} <span>→</span></button></div>
     </form>
   </section>
 </template>
