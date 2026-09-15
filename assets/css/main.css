@@ -30,11 +30,10 @@ button, input, select { font-family:inherit; }
 .empty-content { display:flex; height:100%; flex-direction:column; align-items:center; justify-content:center; gap:4px; }.empty-mark { color:#8ba68f; font-size:27px; }.empty-hint { color:#67816e; font-size:12px; font-weight:700; }
 .plot-cell:focus-visible { position:relative; z-index:1; outline:3px solid #347a4b; outline-offset:2px; }.plot-selected { border:3px solid #347a4b; box-shadow:0 0 0 3px #b9e1bd; }
 .legend button { min-height:44px; font:13px 'DM Mono',monospace; }.grid-caption { font-size:12px; }
-.popover-layer { position:fixed; inset:0; z-index:20; pointer-events:auto; }
-.plant-popover { position:fixed; width:390px; max-height:calc(100vh - 32px); overflow:auto; padding:27px 27px 24px; border:1px solid #cfddd0; border-radius:8px; background:#fbfcf8; box-shadow:0 14px 40px #20332e25, 0 2px 8px #20332e12; color:var(--ink); }
+.plant-popover { width:390px; max-height:calc(100vh - 32px); overflow:auto; padding:27px 27px 24px; border:1px solid #cfddd0; border-radius:8px; background:#fbfcf8; box-shadow:0 14px 40px #20332e25, 0 2px 8px #20332e12; color:var(--ink); }
 .plant-popover:focus-visible { outline:3px solid #347a4b; outline-offset:3px; }.plant-popover h2 { margin:12px 0 6px; font-size:24px; letter-spacing:-1px; }.popover-title-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }.popover-title-row h2 { margin-bottom:0; }.popover-alerts { margin:23px 0 18px; border-top:1px solid var(--line); }.popover-alerts > div { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 0; border-bottom:1px solid var(--line); font-size:13px; }.popover-alerts strong { font-weight:700; }.popover-alerts b { color:#4d7c57; font-size:13px; text-align:right; }.popover-alerts .overdue b { color:#a74737; }.popover-actions { display:grid; gap:9px; }.action-button { min-height:47px; padding:10px 12px; font-size:14px; text-align:left; }.harvest-button { text-align:center; }.details-link,.remove-link { display:block; width:100%; margin-top:19px; border:0; background:none; color:#4c8a59; font-size:13px; font-weight:750; text-align:left; text-decoration:none; }.details-link span { float:right; font-size:18px; }.remove-link { margin-top:22px; color:#9a6359; font-weight:650; }.remove-confirm { margin-top:19px; padding:15px; border:1px solid #edd7ce; background:#fff5f0; }.remove-confirm strong { font-size:14px; }.remove-confirm p { margin:7px 0 14px; color:#786d68; font-size:13px; line-height:1.5; }.remove-confirm label { display:block; color:#6a6d68; font-size:12px; font-weight:700; }.remove-confirm input { width:100%; margin-top:7px; padding:10px; border:1px solid #e2cbc1; background:#fff; font-size:13px; }.remove-confirm > div { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }.cancel-button,.confirm-remove { min-height:44px; padding:8px 12px; border:0; font-size:13px; font-weight:750; }.cancel-button { background:transparent; color:#786d68; }.confirm-remove { background:#a95645; color:#fff; }.close-button { z-index:1; min-width:44px; min-height:44px; }
 .detail-page { max-width:1080px; }.detail-layout { max-width:920px; padding:65px 0; }.detail-header { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }.detail-header h1 { margin:14px 0 8px; font-size:46px; letter-spacing:-2px; }.cycle-summary { margin-top:40px; padding:28px; border:1px solid var(--line); background:#e8f5e5; }.cycle-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin:24px 0 27px; }.cycle-stats small { display:block; color:#66806b; font-size:13px; }.cycle-stats strong { display:block; margin-top:7px; font-size:18px; }.progress-label { display:flex; justify-content:space-between; color:#5f7765; font-size:13px; }.detail-progress { height:7px; margin-top:9px; background:#cfe6d0; }.detail-progress i { display:block; height:100%; background:#63ab70; }.detail-columns { display:grid; grid-template-columns:1.1fr .9fr; gap:60px; margin-top:56px; }.detail-columns h2 { margin:13px 0 21px; font-size:23px; }.full-history { border-top:1px solid var(--line); }.full-history .history-row { min-height:53px; font-size:14px; }.history-row small { display:block; margin-top:3px; color:var(--muted); font-size:12px; }.info-list { border-top:1px solid var(--line); }.info-list div { display:flex; justify-content:space-between; gap:15px; padding:15px 0; border-bottom:1px solid var(--line); font-size:14px; }.info-list strong { font-weight:750; text-align:right; }
-@media (max-width:720px) { .plant-popover { top:auto !important; right:12px; bottom:12px; left:12px !important; width:auto; max-height:calc(100vh - 24px); border-radius:12px; padding:25px 21px 21px; }.detail-header { display:block; }.detail-header h1 { font-size:36px; }.cycle-stats,.detail-columns { grid-template-columns:1fr; gap:22px; }.detail-layout { padding:40px 0; }.cycle-summary { padding:21px; }.cycle-stats { margin:20px 0; }.grid-caption { align-items:flex-start; flex-direction:column; gap:8px; }.grid-count { font-size:11px; } }
+@media (max-width:720px) { .plant-popover { top:auto !important; right:12px; bottom:12px; left:12px !important; width:auto; max-height:calc(100vh - 24px); transform:none !important; border-radius:12px; padding:25px 21px 21px; }.detail-header { display:block; }.detail-header h1 { font-size:36px; }.cycle-stats,.detail-columns { grid-template-columns:1fr; gap:22px; }.detail-layout { padding:40px 0; }.cycle-summary { padding:21px; }.cycle-stats { margin:20px 0; }.grid-caption { align-items:flex-start; flex-direction:column; gap:8px; }.grid-count { font-size:11px; } }
 .garden-layout { display:block; padding-top:45px; }.garden-main { width:100%; }.garden-heading { margin-bottom:22px; }.garden-heading h1 { margin:10px 0 7px; }.garden-filters { margin-bottom:20px; }.ui-toggle-group { display:inline-flex; max-width:100%; overflow:auto; padding:4px; border:1px solid #d4ded5; border-radius:6px; background:#eef4ed; }.ui-toggle-item { min-height:44px; padding:9px 16px; border:0; border-radius:4px; background:transparent; color:#5c7061; font-size:14px; font-weight:700; white-space:nowrap; }.ui-toggle-item span { margin-left:6px; color:#829787; font:13px 'DM Mono',monospace; }.ui-toggle-item:hover { background:#e0ebdf; color:var(--ink); }.ui-toggle-item:focus-visible { position:relative; z-index:1; outline:3px solid #347a4b; outline-offset:2px; }.ui-toggle-item[data-state='on'] { background:#fff; color:var(--ink); box-shadow:0 1px 4px #20332e18; }.ui-toggle-item[data-state='on'] span { color:#4d8d5b; }.garden-filters .ui-toggle-group { width:max-content; }.filter-empty-message { margin:0; padding:15px; border:1px dashed #cbd9cb; color:#5f8065; font-size:14px; text-align:center; }
 .ui-button { display:inline-flex; min-height:44px; align-items:center; justify-content:center; gap:8px; border:1px solid transparent; border-radius:4px; padding:10px 15px; font-size:14px; font-weight:750; line-height:1.2; transition:background .15s, border-color .15s, opacity .15s; }.ui-button:focus-visible { outline:3px solid #347a4b; outline-offset:2px; }.ui-button:disabled { cursor:wait; opacity:.55; }.ui-button-default { background:var(--ink); color:#fff; }.ui-button-default:hover { background:#2d4a42; }.ui-button-outline { border-color:#b9cbbb; background:#fff; color:#365c40; }.ui-button-outline:hover { background:#eaf5e9; }.ui-button-ghost { background:transparent; color:#6d766f; }.ui-button-destructive { background:#a95645; color:#fff; }.ui-button-sm { min-height:40px; padding:8px 12px; font-size:13px; }
 .plant-popover .button-dark, .plant-popover .button { width:100%; }.plant-popover .action-button.ui-button { justify-content:flex-start; }.plant-popover .harvest-button.ui-button { justify-content:center; }.plant-popover .remove-confirm .ui-button { width:auto; }
@@ -88,3 +87,125 @@ button, input, select { font-family:inherit; }
 .popover-alerts b > span { display:block; }
 .popover-alerts b small { display:block; margin-top:3px; color:#76927b; font:10px Inter, sans-serif; }
 .popover-alerts .overdue b small { color:#a74737; }
+.ui-popover-anchor { position:fixed; width:1px; height:1px; pointer-events:none; }
+.ui-dialog-overlay { position:fixed; inset:0; z-index:60; background:#20332e55; }
+.ui-dialog-content { position:fixed; top:50%; left:50%; z-index:61; width:min(420px,calc(100vw - 32px)); transform:translate(-50%,-50%); border:1px solid #d6e1d7; border-radius:9px; background:#fbfcf8; padding:25px; box-shadow:0 16px 42px #20332e35; outline:none; }
+.ui-dialog-content:focus-visible { outline:3px solid #347a4b; outline-offset:3px; }
+.ui-dialog-title { margin:0 0 6px; font-size:20px; letter-spacing:-.5px; }
+.ui-dialog-description { margin:0 0 17px; color:var(--muted); font-size:13px; }
+.ui-dialog-content .remove-confirm { margin-top:0; padding:0; border:0; background:transparent; }
+.dev-confirmation p { margin:0 0 18px; color:var(--ink); font-size:14px; }
+.dev-confirmation > div { display:flex; justify-content:flex-end; gap:8px; }
+
+/* Compact density: preserve the visual language while giving content more room. */
+@media (min-width:721px) {
+  .app-shell { padding-bottom:40px; }
+  .topbar { height:72px; }
+  .dashboard-head { padding:42px 0 28px; }
+  .dashboard-head h1 { font-size:clamp(32px, 3.5vw, 46px); }
+  .dashboard-head-actions .ui-button { min-height:36px; padding:7px 11px; font-size:13px; }
+  .summary-grid { gap:10px; }
+  .summary-card { min-height:132px; padding:18px 20px; }
+  .summary-card strong { margin-top:10px; font-size:22px; }
+  .summary-primary strong { font-size:25px; }
+  .summary-note { margin-top:12px; }
+  .dashboard-columns { gap:32px; margin-top:38px; }
+  .section-heading { margin-bottom:14px; }
+  .garden-layout { padding-top:28px; }
+  .garden-heading { margin-bottom:14px; }
+  .garden-heading h1 { margin:6px 0 3px; font-size:32px; letter-spacing:-1.5px; }
+  .garden-current-label { margin-bottom:4px; font-size:10px; }
+  .garden-switcher { font-size:14px; padding-bottom:3px; }
+  .garden-heading .subtitle { font-size:13px; }
+  .garden-header-actions .ui-button { min-height:36px; padding:7px 11px; font-size:13px; }
+  .garden-filters { margin-bottom:12px; }
+  .ui-toggle-group { padding:2px; }
+  .ui-toggle-item { min-height:36px; padding:7px 12px; font-size:13px; }
+  .ui-toggle-item span { margin-left:4px; font-size:12px; }
+  .grid-card { padding:14px 14px 0; }
+  .garden-grid-wrap { grid-template-columns:36px repeat(var(--columns), minmax(132px, 1fr)); gap:6px; }
+  .grid-axis { padding-bottom:5px; }
+  .plot-cell { min-height:76px; padding:9px 9px 16px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; }
+  .cell-crop { min-width:0; overflow:visible; overflow-wrap:anywhere; font-size:13px; line-height:1.25; text-align:center; text-overflow:clip; white-space:normal; }
+  .cell-indicator { max-width:100%; margin-top:0; overflow:visible; overflow-wrap:anywhere; font-size:11px; line-height:1.2; text-align:center; text-overflow:clip; white-space:normal; }
+  .plot-cell small { right:7px; bottom:5px; }
+  .plot-empty .empty-content { height:auto; flex-direction:row; justify-content:flex-start; gap:6px; }
+  .plot-empty .empty-mark { height:auto; font-size:21px; }
+  .plot-empty .empty-hint { font-size:11px; }
+  .plant-popover { width:360px; max-height:calc(100vh - 32px); padding:18px 20px 17px; }
+  .plant-popover h2 { margin:7px 0 4px; font-size:21px; }
+  .plant-popover .popover-alerts { margin:14px 0 13px; }
+  .plant-popover .popover-alerts > div { padding:8px 0; font-size:12px; }
+  .plant-popover .popover-alerts b { font-size:12px; }
+  .plant-popover .popover-actions { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:7px; }
+  .plant-popover .popover-actions .harvest-button { grid-column:1 / -1; }
+  .plant-popover .action-button { min-height:40px; padding:8px 9px; font-size:13px; }
+  .plant-popover .details-link { margin-top:13px; }
+  .plant-popover .remove-link { margin-top:14px; }
+  .completed-sheet-heading { padding-bottom:16px; }
+  .completed-sheet-heading h2 { margin:8px 0 4px; font-size:23px; }
+  .completed-item { gap:10px; padding:10px 0; }
+  .completed-icon { width:32px; height:32px; flex-basis:32px; font-size:16px; }
+  .completed-main small { margin-top:3px; font-size:11px; }
+  .ui-sheet-content { padding:20px 24px 32px; }
+  .drawer-heading { padding-bottom:16px; }
+  .drawer-heading h2 { margin:8px 0 4px; font-size:23px; }
+  .drawer-summary { gap:12px; padding:16px 0; }
+  .drawer-summary span { font-size:12px; }
+  .drawer-summary strong { margin-top:3px; font-size:14px; }
+  .drawer-section { padding-top:18px; }
+  .drawer-section h3 { margin:8px 0 12px; font-size:17px; }
+  .drawer-event { min-height:52px; gap:8px; }
+  .event-icon { width:27px; height:27px; font-size:14px; }
+  .drawer-event strong { font-size:13px; }
+  .drawer-event small { margin-top:2px; font-size:11px; }
+  .drawer-event time { font-size:10px; }
+  .dev-panel-bar { min-height:38px; padding:0 14px; }
+  .dev-panel-toggle { min-height:36px; gap:7px; font-size:11px; }
+  .dev-panel-body { max-height:35vh; }
+  .dev-context-row { gap:8px; padding:8px 14px; }
+  .dev-context-row select,.dev-fields input,.dev-fields select,.dev-form input { min-height:31px; padding:5px 7px; }
+  .dev-tabs { padding:0 14px; }
+  .dev-tabs button { min-height:33px; padding:5px 9px; }
+  .dev-content { padding:10px 14px 13px; }
+  .dev-grid-content { gap:20px; }
+  .dev-definition-list dt,.dev-definition-list dd { padding:4px 0; }
+  .dev-help,.dev-form p { margin-bottom:9px; }
+  .dev-fields { gap:8px; margin-bottom:9px; }
+  .dev-fields label { min-width:155px; }
+  .dev-subheading { margin-top:14px !important; padding-top:10px; }
+}
+
+@media (max-width:720px) {
+  .topbar { height:72px; }
+  .garden-layout { padding-top:26px; }
+  .garden-heading h1 { margin-top:8px; font-size:32px; }
+  .garden-filters { margin-bottom:14px; }
+  .ui-toggle-group { padding:3px; }
+  .ui-toggle-item { min-height:42px; }
+  .grid-card { padding:12px 10px 0; }
+  .garden-grid-wrap { grid-template-columns:32px repeat(var(--columns), minmax(132px, 1fr)); gap:6px; }
+  .plot-cell { min-height:82px; padding:10px 9px 18px; }
+  .cell-crop { font-size:13px; }
+  .cell-indicator { font-size:11px; }
+  .ui-sheet-content { padding:23px 21px 30px; }
+  .drawer-summary { padding:20px 0; }
+  .drawer-section { padding-top:22px; }
+  .dev-panel-bar { min-height:42px; }
+  .dev-panel-toggle { min-height:40px; }
+}
+
+/* Keep the map chrome visible while only the spatial grid scrolls. */
+.grid-card { display:flex; min-height:0; flex-direction:column; overflow:hidden; }
+.garden-grid-viewport { min-height:240px; max-height:min(560px, calc(100vh - 250px)); overflow:auto; overscroll-behavior:contain; }
+.grid-card > .filter-empty-message { flex:0 0 auto; margin:0; }
+.grid-card > .grid-caption { flex:0 0 auto; margin:0; border-top:1px solid var(--line); background:#fff; }
+
+@media (max-width:720px) {
+  .garden-grid-viewport { min-height:240px; max-height:calc(100dvh - 330px); }
+  .grid-card > .grid-caption { align-items:flex-start; flex-direction:column; gap:6px; }
+}
+
+.plant-popover { position:relative; }
+.plant-popover .close-button { top:0; right:0; }
+.garden-grid-viewport { padding-bottom:14px; scroll-padding-bottom:14px; }

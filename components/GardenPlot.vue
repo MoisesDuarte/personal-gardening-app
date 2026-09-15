@@ -27,7 +27,6 @@ const careLabel = (days: number) => days < 0 ? 'Atrasada' : relativeDayLabel(day
     <template #trigger>
       <button class="plot-cell" :data-plot-id="plot.id" :class="[stateClass, { 'plot-dimmed': dimmed, 'plot-selected': selected }]" :aria-label="accessibleLabel" :aria-pressed="selected" @click="emit('select', plot)">
         <span class="cell-crop"><span aria-hidden="true">{{ emoji }}</span> {{ planting.cropType.name }}</span>
-        <span class="cell-age">{{ planting.ageInDays }} dias</span>
         <span v-for="indicator in indicators" :key="indicator.text" class="cell-indicator" :class="`indicator-${indicator.kind}`">{{ indicator.text }}</span>
         <small>{{ cellLabel }}</small>
       </button>

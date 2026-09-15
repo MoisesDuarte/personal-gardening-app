@@ -41,12 +41,16 @@ function selectPlot(plot: Plot) {
   if (garden.value) setContext(garden.value.id, plot.id)
   nextTick(() => {
     const target = document.querySelector(`[data-plot-id="${plot.id}"]`) as HTMLElement | null
-    const rect = target?.getBoundingClientRect()
-    const width = 390
-    const top = rect ? Math.min(Math.max(16, rect.top), Math.max(16, window.innerHeight - 510)) : 80
-    let left = rect ? rect.right + 14 : 24
-    if (left + width > window.innerWidth - 16) left = rect ? rect.left - width - 14 : 24
-    popoverPosition.value = { top, left: Math.max(16, left) }
+    let rect = target?.getBoundingClientRect()
+    const panelReserve = 540
+    if (target && window.innerWidth > 720 && rect && rect.bottom + panelReserve > window.innerHeight - 16) {
+      target.scrollIntoView({ block: 'center', inline: 'nearest' })
+      rect = target.getBoundingClientRect()
+    }
+    popoverPosition.value = {
+      top: rect ? Math.max(16, rect.top) : 80,
+      left: rect ? rect.right : 24,
+    }
   })
 }
 async function refresh(action: 'WATERING' | 'FERTILIZING' | 'HARVEST' | 'REMOVAL', updated?: Planting) {
@@ -137,11 +141,11 @@ onMounted(loadCurrent)
           <div class="garden-header-actions"><UiButton variant="outline" @click="openCompletedHistory">Histórico de cultivos</UiButton><UiButton class="button button-dark" :disabled="!freeCount" @click="selectPlot(plots.find((plot) => !plot.planting) || plots[0] || null!)">+ Novo plantio</UiButton><UiButton variant="ghost" @click="createOpen = true">Nova horta</UiButton></div>
         </div>
         <GardenFilters v-model="activeFilter" :total="plots.length" :free="freeCount" :care="needsCare" />
-        <div class="grid-card"><GardenGrid :rows="garden.rows" :columns="garden.columns" :plots="plots" :filter="activeFilter" :selected-plot-id="selectedPlot?.id" @select="selectPlot" /><p v-if="filterEmptyMessage" class="filter-empty-message" aria-live="polite">{{ filterEmptyMessage }}</p><div class="grid-caption"><span><i class="tiny-sprout">✳</i> Selecione uma célula para ver seu estado e ações</span><span class="grid-count">{{ activeCount }} plantios ativos · {{ freeCount }} livres</span></div></div>
+        <div class="grid-card"><div class="garden-grid-viewport"><GardenGrid :rows="garden.rows" :columns="garden.columns" :plots="plots" :filter="activeFilter" :selected-plot-id="selectedPlot?.id" @select="selectPlot" /></div><p v-if="filterEmptyMessage" class="filter-empty-message" aria-live="polite">{{ filterEmptyMessage }}</p><div class="grid-caption"><span><i class="tiny-sprout">✳</i> Selecione uma célula para ver seu estado e ações</span><span class="grid-count">{{ activeCount }} plantios ativos · {{ freeCount }} livres</span></div></div>
       </section>
     </div>
     <p v-else class="form-error">{{ error || 'Horta não encontrada.' }}</p>
-    <PlantingPanel :plot="selectedPlot" :crop-types="cropTypes" :position="popoverPosition" :history-open="historyOpen" @close="closePanel" @changed="refresh" @sync="syncPlot" @history="openHistory" />
+    <PlantingPanel :plot="selectedPlot" :crop-types="cropTypes" :position="popoverPosition" @close="closePanel" @changed="refresh" @sync="syncPlot" @history="openHistory" />
     <CompletedPlantingsSheet v-model:open="completedOpen" :garden-name="garden?.name || ''" :plantings="completedPlantings" :loading="completedLoading" @select="openHistoricalPlanting" />
     <PlantHistoryDrawer :open="historyOpen" :planting="historyPlanting" :cell-label="historyCellLabel" @update:open="closeHistory" />
     <UiSheet :open="createOpen" title="Nova horta" description="Crie uma nova área de cultivo" @update:open="createOpen = $event">

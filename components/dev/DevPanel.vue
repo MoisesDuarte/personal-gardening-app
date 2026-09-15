@@ -11,6 +11,7 @@ const clockDate = ref('')
 const quickCropId = ref('')
 const quickAge = ref(20)
 const customEventAt = ref('')
+const pendingDatabaseAction = ref<string | null>(null)
 const wateringInterval = ref(1)
 const fertilizingInterval = ref(1)
 const harvestDays = ref(1)
@@ -133,9 +134,14 @@ async function databaseAction(action: string) {
   if (!contextPlot.value && action !== 'reset-garden') return
   if (action === 'reset-garden' && !selectedGardenId.value) return
   const destructive = ['clear-plot', 'reset-planting', 'reset-garden'].includes(action)
-  if (destructive && !window.confirm('Esta ação altera dados persistidos. Deseja continuar?')) return
+  if (destructive) { pendingDatabaseAction.value = action; return }
+  await executeDatabaseAction(action)
+}
+async function executeDatabaseAction(action: string) {
+  pendingDatabaseAction.value = null
   await run('Database operation completed', async () => { await $fetch('/api/dev/database', { method: 'POST', body: { action, plotId: contextPlot.value?.id, gardenId: selectedGardenId.value } }) })
 }
+function databaseActionLabel(action: string | null) { return action === 'reset-garden' ? 'resetar a horta selecionada' : action === 'clear-plot' ? 'limpar a célula selecionada' : 'resetar o plantio selecionado' }
 async function copyRaw() {
   await navigator.clipboard.writeText(rawJson.value)
   success('JSON copied')
@@ -173,5 +179,8 @@ onMounted(async () => {
         <div v-else class="dev-raw"><div class="dev-raw-heading"><h3>Inspector JSON</h3><button @click="copyRaw">Copy JSON</button></div><pre>{{ rawJson }}</pre></div>
       </div>
     </div>
+    <UiDialog :open="Boolean(pendingDatabaseAction)" title="Confirmar operação" description="Esta ação altera dados persistidos." @update:open="pendingDatabaseAction = $event ? pendingDatabaseAction : null">
+      <div class="dev-confirmation"><p>Deseja {{ databaseActionLabel(pendingDatabaseAction) }}?</p><div><button class="dev-muted-button" @click="pendingDatabaseAction = null">Cancelar</button><button class="dev-danger-button" @click="executeDatabaseAction(pendingDatabaseAction!)">Continuar</button></div></div>
+    </UiDialog>
   </section>
 </template>

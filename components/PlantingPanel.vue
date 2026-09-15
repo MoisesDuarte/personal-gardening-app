@@ -2,7 +2,7 @@
 import type { CropType, Planting, Plot } from '~/types/domain'
 import { formatAppDate, relativeDayLabel } from '~/utils/dates'
 
-const props = defineProps<{ plot: Plot | null; cropTypes: CropType[]; position?: { top: number; left: number }; historyOpen?: boolean }>()
+const props = defineProps<{ plot: Plot | null; cropTypes: CropType[]; position?: { top: number; left: number } }>()
 const emit = defineEmits<{ close: []; changed: [action: 'WATERING' | 'FERTILIZING' | 'HARVEST' | 'REMOVAL', planting: Planting]; sync: [plotId: string]; history: [planting: NonNullable<Plot['planting']>] }>()
 const planting = computed(() => props.plot?.planting || null)
 const selectedCrop = ref('')
@@ -14,9 +14,7 @@ const showRemoveConfirm = ref(false)
 const formatDate = (date?: string | null) => date ? formatAppDate(date) : '—'
 const stateLabel = (state: string) => ({ READY: 'Pronta para colher', NEAR_HARVEST: 'Quase lá', NEEDS_WATERING: 'Precisa irrigar', NEEDS_FERTILIZING: 'Precisa adubar', GROWING: 'Em crescimento' }[state] || 'Em crescimento')
 const emoji = computed(() => planting.value?.cropType.name === 'Cenoura' ? '🥕' : planting.value?.cropType.name === 'Alface' ? '🥬' : '🌱')
-const positionStyle = computed(() => props.position ? { top: `${props.position.top}px`, left: `${props.position.left}px` } : undefined)
 
-function onKeydown(event: KeyboardEvent) { if (event.key === 'Escape' && !event.defaultPrevented && !props.historyOpen) emit('close') }
 async function plant() {
   busy.value = true; error.value = ''
   try { const created = await $fetch<Planting>(`/api/plots/${props.plot!.id}/plantings`, { method: 'POST', body: { cropTypeId: selectedCrop.value, plantedAt: new Date(`${plantedAt.value}T12:00:00Z`) } }); success('Plantio registrado', `A célula ${String.fromCharCode(64 + props.plot!.row)}${props.plot!.column} está em acompanhamento.`); emit('changed', 'WATERING', created) }
@@ -49,13 +47,11 @@ async function removePlanting() {
 const removeReason = ref('')
 const popover = ref<HTMLElement | null>(null)
 watch(() => [props.plot?.id, props.plot?.planting?.id], async ([id]) => { if (id) { error.value = ''; showRemoveConfirm.value = false; await nextTick(); popover.value?.focus() } }, { immediate: true })
-onMounted(() => window.addEventListener('keydown', onKeydown))
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
-  <div v-if="plot" class="popover-layer" @click.self="emit('close')">
-    <section ref="popover" class="plant-popover" :style="positionStyle" role="dialog" aria-modal="false" aria-labelledby="planting-popover-title" tabindex="-1">
+  <UiPopover :open="Boolean(plot)" :position="position" content-class="plant-popover" labelled-by="planting-popover-title" @update:open="(open) => { if (!open) emit('close') }">
+    <section v-if="plot" ref="popover" class="plant-popover-body" tabindex="-1">
       <button class="close-button" aria-label="Fechar detalhes" @click="emit('close')">×</button>
       <span class="eyebrow">CÉLULA {{ String.fromCharCode(64 + plot.row) }}{{ plot.column }}</span>
       <template v-if="!planting">
@@ -78,8 +74,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <p v-if="error" class="form-error">{{ error }}</p>
         <button class="details-link" @click="emit('history', planting)">Ver histórico <span>↗</span></button>
         <button v-if="!showRemoveConfirm" class="remove-link" @click="showRemoveConfirm = true">Remover/descartar planta</button>
-        <div v-else class="remove-confirm"><strong>Remover esta planta?</strong><p>O plantio será encerrado e o espaço ficará disponível. O histórico será mantido.</p><label>Motivo (opcional) <input v-model="removeReason" maxlength="200" placeholder="Ex.: planta doente" /></label><div><UiButton variant="ghost" size="sm" :disabled="busy" @click="showRemoveConfirm = false">Cancelar</UiButton><UiButton variant="destructive" size="sm" :disabled="busy" @click="removePlanting">{{ busy ? 'Removendo…' : 'Remover planta' }}</UiButton></div></div>
+        <UiDialog :open="showRemoveConfirm" title="Remover planta" description="Confirme o encerramento deste plantio" @update:open="showRemoveConfirm = $event">
+          <div class="remove-confirm"><strong>Remover esta planta?</strong><p>O plantio será encerrado e o espaço ficará disponível. O histórico será mantido.</p><label>Motivo (opcional) <input v-model="removeReason" maxlength="200" placeholder="Ex.: planta doente" /></label><div><UiButton variant="ghost" size="sm" :disabled="busy" @click="showRemoveConfirm = false">Cancelar</UiButton><UiButton variant="destructive" size="sm" :disabled="busy" @click="removePlanting">{{ busy ? 'Removendo…' : 'Remover planta' }}</UiButton></div></div>
+        </UiDialog>
       </template>
     </section>
-  </div>
+  </UiPopover>
 </template>
