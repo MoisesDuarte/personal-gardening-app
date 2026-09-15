@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "postinstall": "node node_modules/nuxt/bin/nuxt.mjs prepare",
-    "dev": "node node_modules/nuxt/bin/nuxt.mjs dev",
+    "dev": "DEV_MODE=true node node_modules/nuxt/bin/nuxt.mjs dev",
     "build": "node node_modules/nuxt/bin/nuxt.mjs build",
     "preview": "node node_modules/nuxt/bin/nuxt.mjs preview",
     "db:migrate": "tsx db/seed/migrate.ts",

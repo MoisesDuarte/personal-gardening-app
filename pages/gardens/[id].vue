@@ -3,6 +3,7 @@ import type { Planting, Plot } from '~/types/domain'
 
 const route = useRoute()
 const { garden, plots, cropTypes, loading, error, loadGarden, loadCropTypes } = useGarden()
+const { setContext, revision } = useDevMode()
 const selectedPlot = ref<Plot | null>(null)
 const activeFilter = ref<'all' | 'empty' | 'NEEDS_WATERING'>('all')
 const popoverPosition = ref<{ top: number; left: number }>()
@@ -26,6 +27,7 @@ function closePanel() {
 
 function selectPlot(plot: Plot) {
   selectedPlot.value = plot
+  if (garden.value) setContext(garden.value.id, plot.id)
   nextTick(() => {
     const target = document.querySelector(`[data-plot-id="${plot.id}"]`) as HTMLElement | null
     const rect = target?.getBoundingClientRect()
@@ -64,7 +66,8 @@ async function syncPlot(plotId: string) {
   if (current) selectPlot(current)
 }
 
-onMounted(async () => { await Promise.all([loadGarden(String(route.params.id)), loadCropTypes()]) })
+watch(revision, async () => { await loadGarden(String(route.params.id)); if (selectedPlot.value) selectedPlot.value = plots.value.find((plot) => plot.id === selectedPlot.value?.id) || null })
+onMounted(async () => { await Promise.all([loadGarden(String(route.params.id)), loadCropTypes()]); if (selectedPlot.value && garden.value) setContext(garden.value.id, selectedPlot.value.id) })
 </script>
 
 <template>

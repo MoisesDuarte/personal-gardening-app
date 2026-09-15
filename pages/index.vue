@@ -3,6 +3,7 @@ import type { Garden, Task, UpcomingHarvest } from '~/types/domain'
 import { formatAppDate } from '~/utils/dates'
 const router = useRouter()
 const gardens = ref<Garden[]>([])
+const { revision } = useDevMode()
 const tasks = ref<Task[]>([])
 const upcomingHarvests = ref<UpcomingHarvest[]>([])
 const activeCount = ref(0)
@@ -21,6 +22,7 @@ async function load() {
   finally { loading.value = false }
 }
 function openGarden(id: string) { router.push(`/gardens/${id}`) }
+watch(revision, load)
 onMounted(load)
 </script>
 

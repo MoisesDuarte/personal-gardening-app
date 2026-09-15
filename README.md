@@ -26,6 +26,16 @@ Testes:
 npm test
 ```
 
+## Modo Desenvolvedor
+
+As ferramentas internas de QA ficam desativadas por padrão. Para habilitá-las localmente:
+
+```bash
+DEV_MODE=true npm run dev
+```
+
+O painel inferior permite substituir o relógio da aplicação, ajustar parâmetros em runtime, inspecionar o estado derivado, criar eventos/cenários e resetar dados de desenvolvimento. Os endpoints `/api/dev/*` retornam `404` quando `DEV_MODE` não está habilitado. Nunca ative esse modo em produção.
+
 ## Arquitetura
 
 - `pages/` e `components/`: interface Nuxt/Vue.
