@@ -16,12 +16,12 @@ const wateringInterval = ref(1)
 const fertilizingInterval = ref(1)
 const harvestDays = ref(1)
 const tabs: { id: DevTab; label: string }[] = [
-  { id: 'state', label: 'State' }, { id: 'time', label: 'Time' }, { id: 'parameters', label: 'Parameters' },
-  { id: 'events', label: 'Events' }, { id: 'scenarios', label: 'Scenarios' }, { id: 'database', label: 'Database' }, { id: 'raw', label: 'Raw' }
+  { id: 'state', label: 'Estado' }, { id: 'time', label: 'Tempo' }, { id: 'parameters', label: 'Parâmetros' },
+  { id: 'events', label: 'Eventos' }, { id: 'scenarios', label: 'Cenários' }, { id: 'database', label: 'Banco de dados' }, { id: 'raw', label: 'Bruto' }
 ]
 const scenarios = [
-  ['normal', 'Normal'], ['water-today', 'Water today'], ['water-overdue', 'Water overdue'], ['fertilize-today', 'Fertilize today'],
-  ['fertilize-overdue', 'Fertilize overdue'], ['water-fertilize', 'Water + fertilize'], ['harvest-soon', 'Harvest soon'], ['ready', 'Ready to harvest']
+  ['normal', 'Normal'], ['water-today', 'Irrigar hoje'], ['water-overdue', 'Irrigação atrasada'], ['fertilize-today', 'Adubar hoje'],
+  ['fertilize-overdue', 'Adubação atrasada'], ['water-fertilize', 'Irrigar + adubar'], ['harvest-soon', 'Colheita próxima'], ['ready', 'Pronta para colher']
 ] as const
 const contextPlot = computed(() => plots.value.find((plot) => plot.id === selectedPlotId.value) || null)
 const contextPlanting = computed(() => inspection.value?.planting || contextPlot.value?.planting || null)
@@ -30,10 +30,10 @@ const stateReasons = computed(() => {
   const planting = contextPlanting.value
   if (!planting) return []
   const reasons = []
-  if (planting.needsWatering) reasons.push('needsWatering')
-  if (planting.needsFertilizing) reasons.push('needsFertilizing')
-  if (planting.state === 'NEAR_HARVEST') reasons.push('nearHarvest')
-  if (planting.state === 'READY') reasons.push('readyForHarvest')
+  if (planting.needsWatering) reasons.push('precisa de irrigação')
+  if (planting.needsFertilizing) reasons.push('precisa de adubação')
+  if (planting.state === 'NEAR_HARVEST') reasons.push('próximo da colheita')
+  if (planting.state === 'READY') reasons.push('pronto para colher')
   return reasons
 })
 const effectiveCrop = computed(() => inspection.value?.effectiveCropType || contextPlanting.value?.cropType || null)
@@ -42,6 +42,22 @@ const rawJson = computed(() => JSON.stringify(inspection.value || { plot: contex
 const isActive = computed(() => contextPlanting.value?.status === 'ACTIVE')
 
 function plotLabel(plot: { row: number; column: number }) { return `${String.fromCharCode(64 + plot.row)}${plot.column}` }
+function booleanLabel(value: boolean) { return value ? 'sim' : 'não' }
+function statusLabel(value: string) { return ({ ACTIVE: 'Ativo', HARVESTED: 'Colhido', REMOVED: 'Removido' } as Record<string, string>)[value] || value }
+function stateLabel(value: string) { return ({ NEAR_HARVEST: 'Próximo da colheita', READY: 'Pronto para colher' } as Record<string, string>)[value] || value }
+function eventLabel(value: string) { return ({ WATERING: 'Irrigação', FERTILIZING: 'Adubação', HARVEST: 'Colheita', REMOVAL: 'Remoção' } as Record<string, string>)[value] || value }
+function scenarioTooltip(value: string) {
+  return ({
+    normal: 'Remove eventos de cuidado e usa uma data de plantio normal.',
+    'water-today': 'Cria uma situação em que a irrigação vence hoje.',
+    'water-overdue': 'Cria uma situação em que a irrigação está atrasada.',
+    'fertilize-today': 'Cria uma situação em que a adubação vence hoje.',
+    'fertilize-overdue': 'Cria uma situação em que a adubação está atrasada.',
+    'water-fertilize': 'Cria uma situação em que irrigação e adubação vencem hoje.',
+    'harvest-soon': 'Ajusta a data para deixar a planta próxima da colheita.',
+    ready: 'Ajusta a data para deixar a planta pronta para colher.'
+  } as Record<string, string>)[value] || 'Aplica este cenário ao plantio selecionado.'
+}
 function syncParameterInputs() {
   const crop = effectiveCrop.value
   if (!crop) return
@@ -63,14 +79,14 @@ async function loadDevState() {
     clockOverride.value = state.clockOverride
     parameterOverrides.value = state.parameterOverrides
     clockDate.value = state.clockOverride ? calendarDateKey(new Date(state.clockOverride)) : ''
-  } catch (cause: any) { notifyError('Dev Mode indisponível', cause?.data?.statusMessage || 'Verifique DEV_MODE.') }
+  } catch (cause: any) { notifyError('Modo dev indisponível', cause?.data?.statusMessage || 'Verifique DEV_MODE.') }
 }
 async function run(label: string, action: () => Promise<unknown>) {
   try { await action(); success(label); notifyChanged(); await inspect() }
   catch (cause: any) { notifyError(label, cause?.data?.statusMessage || 'Não foi possível concluir a operação.') }
 }
 async function setClock(date = clockDate.value || null) {
-  await run('Clock changed', async () => {
+  await run('Relógio da aplicação atualizado', async () => {
     const result = await $fetch<{ clockOverride: string | null }>('/api/dev/clock', { method: 'POST', body: { date } })
     clockOverride.value = result.clockOverride
     clockDate.value = result.clockOverride ? calendarDateKey(new Date(result.clockOverride)) : ''
@@ -82,7 +98,7 @@ function shiftClock(days: number) {
   setClock()
 }
 async function resetOverrides() {
-  await run('Dev overrides reset', async () => {
+  await run('Substituições do modo dev restauradas', async () => {
     await Promise.all([
       $fetch('/api/dev/clock', { method: 'POST', body: { date: null } }),
       $fetch('/api/dev/parameters/reset', { method: 'POST', body: {} })
@@ -92,43 +108,43 @@ async function resetOverrides() {
 }
 async function applyParameters() {
   if (!persistedCrop.value) return
-  await run('Runtime parameters applied', async () => {
+  await run('Parâmetros de execução aplicados', async () => {
     const result = await $fetch<{ parameterOverrides: Record<string, any> }>('/api/dev/parameters', { method: 'POST', body: { cropTypeId: persistedCrop.value.id, wateringIntervalDays: Number(wateringInterval.value), fertilizingIntervalDays: Number(fertilizingInterval.value), harvestDays: Number(harvestDays.value) } })
     parameterOverrides.value = result.parameterOverrides
   })
 }
 async function saveParameters() {
   if (!persistedCrop.value) return
-  await run('CropType persisted', async () => {
+  await run('Parâmetros salvos no tipo de planta', async () => {
     const result = await $fetch<{ parameterOverrides: Record<string, DevCropOverride> }>('/api/dev/parameters/persist', { method: 'POST', body: { cropTypeId: persistedCrop.value.id, wateringIntervalDays: Number(wateringInterval.value), fertilizingIntervalDays: Number(fertilizingInterval.value), harvestDays: Number(harvestDays.value) } })
     parameterOverrides.value = result.parameterOverrides
   })
 }
 async function resetParameters() {
-  await run('Runtime parameters reset', async () => {
+  await run('Parâmetros de execução restaurados', async () => {
     const result = await $fetch<{ parameterOverrides: Record<string, DevCropOverride> }>('/api/dev/parameters/reset', { method: 'POST', body: { cropTypeId: persistedCrop.value?.id } })
     parameterOverrides.value = result.parameterOverrides
   })
 }
 async function quickPlant() {
   if (!contextPlot.value || !quickCropId.value) return
-  await run('Quick plant created', async () => {
+  await run('Plantio rápido criado', async () => {
     await $fetch('/api/dev/quick-plant', { method: 'POST', body: { plotId: contextPlot.value!.id, cropTypeId: quickCropId.value, ageDays: Number(quickAge.value) } })
   })
 }
 async function addEvent(type: 'WATERING' | 'FERTILIZING' | 'HARVEST' | 'REMOVAL') {
   if (!contextPlanting.value) return
-  await run(`${type} event added`, async () => {
+  await run(`Evento de ${eventLabel(type).toLowerCase()} adicionado`, async () => {
     await $fetch(`/api/plantings/${contextPlanting.value!.id}/events`, { method: 'POST', body: { type, ...(customEventAt.value ? { performedAt: new Date(customEventAt.value).toISOString() } : {}) } })
   })
 }
 async function applyScenario(scenario: string) {
   if (!contextPlot.value) return
-  await run('Scenario applied', async () => { await $fetch('/api/dev/scenario', { method: 'POST', body: { plotId: contextPlot.value!.id, scenario } }) })
+  await run('Cenário aplicado', async () => { await $fetch('/api/dev/scenario', { method: 'POST', body: { plotId: contextPlot.value!.id, scenario } }) })
 }
 async function setPlantedAt(value: string) {
   if (!contextPlot.value || !value) return
-  await run('Planted date changed', async () => { await $fetch('/api/dev/planting', { method: 'POST', body: { plotId: contextPlot.value!.id, plantedAt: value } }) })
+  await run('Data de plantio atualizada', async () => { await $fetch('/api/dev/planting', { method: 'POST', body: { plotId: contextPlot.value!.id, plantedAt: value } }) })
 }
 async function databaseAction(action: string) {
   if (!contextPlot.value && action !== 'reset-garden') return
@@ -139,12 +155,14 @@ async function databaseAction(action: string) {
 }
 async function executeDatabaseAction(action: string) {
   pendingDatabaseAction.value = null
-  await run('Database operation completed', async () => { await $fetch('/api/dev/database', { method: 'POST', body: { action, plotId: contextPlot.value?.id, gardenId: selectedGardenId.value } }) })
+  await run('Operação do banco de dados concluída', async () => { await $fetch('/api/dev/database', { method: 'POST', body: { action, plotId: contextPlot.value?.id, gardenId: selectedGardenId.value } }) })
 }
-function databaseActionLabel(action: string | null) { return action === 'reset-garden' ? 'resetar a horta selecionada' : action === 'clear-plot' ? 'limpar a célula selecionada' : 'resetar o plantio selecionado' }
+function databaseActionLabel(action: string | null) {
+  return action === 'reset-garden' ? 'resetar a horta selecionada' : action === 'clear-plot' ? 'limpar a célula selecionada' : action === 'clear-events' ? 'limpar os eventos de cuidado' : action === 'delete-last-event' ? 'excluir o último evento' : 'resetar o plantio selecionado'
+}
 async function copyRaw() {
   await navigator.clipboard.writeText(rawJson.value)
-  success('JSON copied')
+  success('JSON copiado')
 }
 
 watch([selectedPlotId, revision], inspect)
@@ -161,22 +179,24 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section v-if="enabled" class="dev-panel" :class="{ collapsed: !expanded }" aria-label="Development tools">
+  <section v-if="enabled" class="dev-panel" :class="{ collapsed: !expanded }" aria-label="Ferramentas de desenvolvimento">
     <div class="dev-panel-bar">
-      <button class="dev-panel-toggle" :aria-expanded="expanded" @click="expanded = !expanded"><span aria-hidden="true">🛠</span> DEV MODE <span class="dev-panel-context">{{ garden?.name || 'No garden' }} · {{ contextLabel }}</span><span aria-hidden="true">{{ expanded ? '⌄' : '⌃' }}</span></button>
-      <span v-if="clockOverride" class="dev-override-badge">⚡ CLOCK OVERRIDE {{ formatAppDate(clockOverride) }}</span>
+      <UiTooltip text="Expandir ou recolher o painel de ferramentas de desenvolvimento.">
+        <button class="dev-panel-toggle" title="Expandir ou recolher o painel de ferramentas de desenvolvimento." :aria-expanded="expanded" @click="expanded = !expanded"><span aria-hidden="true">🛠</span> MODO DEV <span class="dev-panel-context">{{ garden?.name || 'Nenhuma horta' }} · {{ contextLabel }}</span><span aria-hidden="true">{{ expanded ? '⌄' : '⌃' }}</span></button>
+      </UiTooltip>
+      <span v-if="clockOverride" class="dev-override-badge">⚡ SUBSTITUIÇÃO DO RELÓGIO {{ formatAppDate(clockOverride) }}</span>
     </div>
     <div v-if="expanded" class="dev-panel-body">
-      <div class="dev-context-row"><label>Garden<select v-model="selectedGardenId"><option :value="garden?.id">{{ garden?.name || 'No garden' }}</option></select></label><label>Plot<select v-model="selectedPlotId"><option v-for="plot in plots" :key="plot.id" :value="plot.id">{{ plotLabel(plot) }} · {{ plot.planting?.cropType.name || 'FREE' }}</option></select></label><span v-if="loading" class="dev-loading">Inspecting…</span></div>
-      <nav class="dev-tabs" aria-label="Development sections"><button v-for="tab in tabs" :key="tab.id" :aria-selected="activeTab === tab.id" :class="{ active: activeTab === tab.id }" @click="activeTab = tab.id">{{ tab.label }}</button></nav>
+      <div class="dev-context-row"><label>Horta<select v-model="selectedGardenId"><option :value="garden?.id">{{ garden?.name || 'Nenhuma horta' }}</option></select></label><label>Célula<select v-model="selectedPlotId"><option v-for="plot in plots" :key="plot.id" :value="plot.id">{{ plotLabel(plot) }} · {{ plot.planting?.cropType.name || 'LIVRE' }}</option></select></label><span v-if="loading" class="dev-loading">Inspecionando…</span></div>
+      <nav class="dev-tabs" aria-label="Seções de desenvolvimento"><button v-for="tab in tabs" :key="tab.id" :aria-selected="activeTab === tab.id" :class="{ active: activeTab === tab.id }" @click="activeTab = tab.id">{{ tab.label }}</button></nav>
       <div class="dev-content">
-        <div v-if="activeTab === 'state'" class="dev-grid-content"><div><h3>Derived state</h3><dl class="dev-definition-list"><template v-if="contextPlanting"><dt>Planting ID</dt><dd>{{ contextPlanting.id }}</dd><dt>Status</dt><dd>{{ contextPlanting.status }}</dd><dt>Planted at</dt><dd>{{ formatAppDate(contextPlanting.plantedAt) }} · {{ contextPlanting.plantedAt }}</dd><dt>Age</dt><dd>{{ contextPlanting.ageInDays }} days</dd><dt>Needs watering</dt><dd>{{ contextPlanting.needsWatering }}</dd><dt>Next watering</dt><dd>{{ formatAppDate(contextPlanting.nextWateringAt) }} · {{ contextPlanting.wateringDaysUntil }} days</dd><dt>Needs fertilizing</dt><dd>{{ contextPlanting.needsFertilizing }}</dd><dt>Next fertilizing</dt><dd>{{ formatAppDate(contextPlanting.nextFertilizingAt) }} · {{ contextPlanting.fertilizingDaysUntil }} days</dd><dt>Expected harvest</dt><dd>{{ formatAppDate(contextPlanting.expectedHarvestAt) }} · {{ contextPlanting.daysToHarvest }} days</dd><dt>Harvest status</dt><dd>{{ contextPlanting.state }}</dd><dt>Needs care</dt><dd>{{ contextPlanting.needsCare }}</dd></template><template v-else><dt>Status</dt><dd>FREE</dd></template></dl></div><div><h3>Filter classification</h3><dl class="dev-definition-list"><dt>All</dt><dd>true</dd><dt>Free</dt><dd>{{ !contextPlanting }}</dd><dt>Needs care</dt><dd>{{ Boolean(contextPlanting?.needsCare) }}</dd><dt>Reasons</dt><dd>{{ stateReasons.length ? stateReasons.join(', ') : '—' }}</dd><dt>Expected indicators</dt><dd>{{ contextPlanting?.needsWatering ? 'WATERING_DUE ' : '' }}{{ contextPlanting?.needsFertilizing ? 'FERTILIZING_DUE ' : '' }}{{ contextPlanting?.state === 'READY' ? 'READY_FOR_HARVEST' : contextPlanting?.state === 'NEAR_HARVEST' ? 'NEAR_HARVEST' : '' }}</dd></dl></div></div>
-        <div v-else-if="activeTab === 'time'" class="dev-form"><h3>Application date</h3><p class="dev-help">Overrides only the application clock. Historical timestamps remain unchanged.</p><div class="dev-inline-form"><label><input v-model="clockDate" type="date" /></label><button @click="setClock()">Apply</button><button @click="shiftClock(1)">Today +1</button><button @click="shiftClock(7)">Today +7</button><button @click="shiftClock(30)">Today +30</button><button class="dev-muted-button" @click="setClock(null)">Reset</button></div><p>Current: <strong>{{ clockOverride ? formatAppDate(clockOverride) : 'Real time' }}</strong></p></div>
-        <div v-else-if="activeTab === 'parameters'" class="dev-form"><h3>Parameters <span v-if="parameterOverrides[persistedCrop?.id || '']" class="dev-override-badge">⚡ DEV OVERRIDE</span></h3><p v-if="!persistedCrop">Select an active planting.</p><template v-else><p class="dev-help">{{ persistedCrop.name }} · Default values are persisted in CropType; overrides affect runtime calculations only.</p><div class="dev-fields"><label>Watering interval <small>Default: {{ persistedCrop.defaultWateringIntervalDays }} days</small><input v-model.number="wateringInterval" type="number" min="1" max="365" /></label><label>Fertilizing interval <small>Default: {{ persistedCrop.defaultFertilizingIntervalDays }} days</small><input v-model.number="fertilizingInterval" type="number" min="1" max="365" /></label><label>Harvest cycle <small>Default: {{ persistedCrop.defaultHarvestDays }} days</small><input v-model.number="harvestDays" type="number" min="1" max="730" /></label></div><div class="dev-actions"><button @click="applyParameters">Apply runtime override</button><button @click="saveParameters">Save to CropType</button><button class="dev-muted-button" @click="resetParameters">Reset defaults</button></div></template></div>
-        <div v-else-if="activeTab === 'events'" class="dev-form"><h3>Add event</h3><p v-if="!isActive" class="dev-help">Select an active planting to use the real event endpoint.</p><template v-else><label>Performed at <input v-model="customEventAt" type="datetime-local" /><small>Leave empty to use clock.now().</small></label><div class="dev-actions"><button @click="addEvent('WATERING')">💧 Watering</button><button @click="addEvent('FERTILIZING')">🌱 Fertilizing</button><button @click="addEvent('HARVEST')">🧺 Harvest</button><button class="dev-danger-button" @click="addEvent('REMOVAL')">Remove plant</button></div></template><h3 class="dev-subheading">Care events</h3><div class="dev-event-list"><div v-for="event in inspection?.lastEvents || []" :key="event.id"><strong>{{ event.type }}</strong><span>{{ event.id }}</span><time>{{ formatAppDate(event.performedAt) }} · {{ formatAppTime(event.performedAt) }}</time></div><p v-if="!inspection?.lastEvents?.length">No events.</p></div></div>
-        <div v-else-if="activeTab === 'scenarios'" class="dev-form"><h3>Scenarios</h3><p class="dev-help">Scenarios adjust planted date and real care events; no artificial state flags are created.</p><div class="dev-actions dev-scenario-grid"><button v-for="scenario in scenarios" :key="scenario[0]" :disabled="!isActive" @click="applyScenario(scenario[0])">{{ scenario[1] }}</button></div><h3 class="dev-subheading">Quick plant</h3><div v-if="!contextPlanting" class="dev-fields"><label>Crop<select v-model="quickCropId"><option value="" disabled>Select crop</option><option v-for="crop in cropTypes.filter((item) => item.isActive)" :key="crop.id" :value="crop.id">{{ crop.name }}</option></select></label><label>Age in days<input v-model.number="quickAge" type="number" min="0" max="3650" /></label><button @click="quickPlant">Create</button></div><p v-else class="dev-help">The selected plot is occupied. Use Database to reset it or choose a free plot.</p></div>
-        <div v-else-if="activeTab === 'database'" class="dev-form"><h3>Development overrides</h3><div class="dev-actions"><button @click="resetOverrides">Reset Dev Overrides</button><button @click="setPlantedAt(clockDate || calendarDateKey(new Date()))" :disabled="!isActive">Set planted at application date</button></div><h3 class="dev-subheading">Danger zone</h3><div class="dev-actions"><button :disabled="!contextPlanting" @click="databaseAction('delete-last-event')">Delete last event</button><button :disabled="!contextPlanting" @click="databaseAction('clear-events')">Clear care events</button><button :disabled="!contextPlanting" class="dev-danger-button" @click="databaseAction('reset-planting')">Reset selected planting</button><button :disabled="!contextPlanting" class="dev-danger-button" @click="databaseAction('clear-plot')">Clear selected plot</button><button :disabled="!selectedGardenId" class="dev-danger-button" @click="databaseAction('reset-garden')">Reset garden</button></div></div>
-        <div v-else class="dev-raw"><div class="dev-raw-heading"><h3>Inspector JSON</h3><button @click="copyRaw">Copy JSON</button></div><pre>{{ rawJson }}</pre></div>
+        <div v-if="activeTab === 'state'" class="dev-grid-content"><div><h3>Estado calculado</h3><dl class="dev-definition-list"><template v-if="contextPlanting"><dt>ID do plantio</dt><dd>{{ contextPlanting.id }}</dd><dt>Status</dt><dd>{{ statusLabel(contextPlanting.status) }}</dd><dt>Plantado em</dt><dd>{{ formatAppDate(contextPlanting.plantedAt) }} · {{ contextPlanting.plantedAt }}</dd><dt>Idade</dt><dd>{{ contextPlanting.ageInDays }} dias</dd><dt>Precisa de irrigação</dt><dd>{{ booleanLabel(contextPlanting.needsWatering) }}</dd><dt>Próxima irrigação</dt><dd>{{ formatAppDate(contextPlanting.nextWateringAt) }} · {{ contextPlanting.wateringDaysUntil }} dias</dd><dt>Precisa de adubação</dt><dd>{{ booleanLabel(contextPlanting.needsFertilizing) }}</dd><dt>Próxima adubação</dt><dd>{{ formatAppDate(contextPlanting.nextFertilizingAt) }} · {{ contextPlanting.fertilizingDaysUntil }} dias</dd><dt>Colheita prevista</dt><dd>{{ formatAppDate(contextPlanting.expectedHarvestAt) }} · {{ contextPlanting.daysToHarvest }} dias</dd><dt>Status da colheita</dt><dd>{{ stateLabel(contextPlanting.state) }}</dd><dt>Precisa de cuidado</dt><dd>{{ booleanLabel(contextPlanting.needsCare) }}</dd></template><template v-else><dt>Status</dt><dd>LIVRE</dd></template></dl></div><div><h3>Classificação dos filtros</h3><dl class="dev-definition-list"><dt>Todas</dt><dd>sim</dd><dt>Livres</dt><dd>{{ booleanLabel(!contextPlanting) }}</dd><dt>Precisam de cuidado</dt><dd>{{ booleanLabel(Boolean(contextPlanting?.needsCare)) }}</dd><dt>Motivos</dt><dd>{{ stateReasons.length ? stateReasons.join(', ') : '—' }}</dd><dt>Indicadores esperados</dt><dd>{{ contextPlanting?.needsWatering ? 'WATERING_DUE ' : '' }}{{ contextPlanting?.needsFertilizing ? 'FERTILIZING_DUE ' : '' }}{{ contextPlanting?.state === 'READY' ? 'READY_FOR_HARVEST' : contextPlanting?.state === 'NEAR_HARVEST' ? 'NEAR_HARVEST' : '' }}</dd></dl></div></div>
+        <div v-else-if="activeTab === 'time'" class="dev-form"><h3>Data da aplicação</h3><p class="dev-help">Substitui apenas o relógio da aplicação. Os registros históricos permanecem inalterados.</p><div class="dev-inline-form"><label><span class="sr-only">Data usada pelo relógio da aplicação</span><input v-model="clockDate" type="date" /></label><UiTooltip text="Aplica a data escolhida ao relógio da aplicação."><button title="Aplica a data escolhida ao relógio da aplicação." @click="setClock()">Aplicar data</button></UiTooltip><UiTooltip text="Avança o relógio da aplicação em 1 dia a partir da data configurada."><button title="Avança o relógio da aplicação em 1 dia a partir da data configurada." @click="shiftClock(1)">+1 dia</button></UiTooltip><UiTooltip text="Avança o relógio da aplicação em 7 dias a partir da data configurada."><button title="Avança o relógio da aplicação em 7 dias a partir da data configurada." @click="shiftClock(7)">+7 dias</button></UiTooltip><UiTooltip text="Avança o relógio da aplicação em 30 dias a partir da data configurada."><button title="Avança o relógio da aplicação em 30 dias a partir da data configurada." @click="shiftClock(30)">+30 dias</button></UiTooltip><UiTooltip text="Remove a substituição e volta a usar a data e hora reais."><button class="dev-muted-button" title="Remove a substituição e volta a usar a data e hora reais." @click="setClock(null)">Restaurar relógio</button></UiTooltip></div><p>Atual: <strong>{{ clockOverride ? formatAppDate(clockOverride) : 'Tempo real' }}</strong></p></div>
+        <div v-else-if="activeTab === 'parameters'" class="dev-form"><h3>Parâmetros <span v-if="parameterOverrides[persistedCrop?.id || '']" class="dev-override-badge">⚡ SUBSTITUIÇÃO DEV</span></h3><p v-if="!persistedCrop">Selecione um plantio ativo.</p><template v-else><p class="dev-help">{{ persistedCrop.name }} · Os valores padrão ficam salvos no tipo de planta; as substituições afetam apenas os cálculos em execução.</p><div class="dev-fields"><label>Intervalo de irrigação <small>Padrão: {{ persistedCrop.defaultWateringIntervalDays }} dias</small><input v-model.number="wateringInterval" type="number" min="1" max="365" /></label><label>Intervalo de adubação <small>Padrão: {{ persistedCrop.defaultFertilizingIntervalDays }} dias</small><input v-model.number="fertilizingInterval" type="number" min="1" max="365" /></label><label>Ciclo de colheita <small>Padrão: {{ persistedCrop.defaultHarvestDays }} dias</small><input v-model.number="harvestDays" type="number" min="1" max="730" /></label></div><div class="dev-actions"><UiTooltip text="Aplica estes valores somente nos cálculos desta sessão; não altera os valores salvos."><button title="Aplica estes valores somente nos cálculos desta sessão; não altera os valores salvos." @click="applyParameters">Aplicar na execução</button></UiTooltip><UiTooltip text="Salva estes valores como o novo padrão do tipo de planta."><button title="Salva estes valores como o novo padrão do tipo de planta." @click="saveParameters">Salvar no tipo de planta</button></UiTooltip><UiTooltip text="Remove a substituição em execução e volta aos valores padrão salvos."><button class="dev-muted-button" title="Remove a substituição em execução e volta aos valores padrão salvos." @click="resetParameters">Restaurar valores padrão</button></UiTooltip></div></template></div>
+        <div v-else-if="activeTab === 'events'" class="dev-form"><h3>Adicionar evento</h3><p v-if="!isActive" class="dev-help">Selecione um plantio ativo para usar o endpoint real de eventos.</p><template v-else><label>Executado em <input v-model="customEventAt" type="datetime-local" /><small>Deixe vazio para usar o relógio da aplicação.</small></label><div class="dev-actions"><UiTooltip text="Registra uma irrigação no plantio selecionado."><button title="Registra uma irrigação no plantio selecionado." @click="addEvent('WATERING')">💧 Irrigação</button></UiTooltip><UiTooltip text="Registra uma adubação no plantio selecionado."><button title="Registra uma adubação no plantio selecionado." @click="addEvent('FERTILIZING')">🌱 Adubação</button></UiTooltip><UiTooltip text="Registra a colheita e encerra o plantio selecionado."><button title="Registra a colheita e encerra o plantio selecionado." @click="addEvent('HARVEST')">🧺 Colheita</button></UiTooltip><UiTooltip text="Remove a planta e encerra o plantio, preservando seu histórico."><button class="dev-danger-button" title="Remove a planta e encerra o plantio, preservando seu histórico." @click="addEvent('REMOVAL')">Remover planta</button></UiTooltip></div></template><h3 class="dev-subheading">Eventos de cuidado</h3><div class="dev-event-list"><div v-for="event in inspection?.lastEvents || []" :key="event.id"><strong>{{ eventLabel(event.type) }}</strong><span>{{ event.id }}</span><time>{{ formatAppDate(event.performedAt) }} · {{ formatAppTime(event.performedAt) }}</time></div><p v-if="!inspection?.lastEvents?.length">Nenhum evento.</p></div></div>
+        <div v-else-if="activeTab === 'scenarios'" class="dev-form"><h3>Cenários</h3><p class="dev-help">Os cenários ajustam a data de plantio e criam eventos reais de cuidado; nenhum indicador de estado artificial é criado.</p><div class="dev-actions dev-scenario-grid"><UiTooltip v-for="scenario in scenarios" :key="scenario[0]" :text="scenarioTooltip(scenario[0])"><button :disabled="!isActive" :title="scenarioTooltip(scenario[0])" @click="applyScenario(scenario[0])">{{ scenario[1] }}</button></UiTooltip></div><h3 class="dev-subheading">Plantio rápido</h3><div v-if="!contextPlanting" class="dev-fields"><label>Planta<select v-model="quickCropId"><option value="" disabled>Selecione uma planta</option><option v-for="crop in cropTypes.filter((item) => item.isActive)" :key="crop.id" :value="crop.id">{{ crop.name }}</option></select></label><label>Idade em dias<input v-model.number="quickAge" type="number" min="0" max="3650" /></label><UiTooltip text="Cria um plantio de teste na célula livre selecionada usando a idade informada."><button title="Cria um plantio de teste na célula livre selecionada usando a idade informada." @click="quickPlant">Criar plantio</button></UiTooltip></div><p v-else class="dev-help">A célula selecionada está ocupada. Use o banco de dados para restaurá-la ou escolha uma célula livre.</p></div>
+        <div v-else-if="activeTab === 'database'" class="dev-form"><h3>Substituições de desenvolvimento</h3><div class="dev-actions"><UiTooltip text="Remove todas as substituições do relógio e dos parâmetros do modo dev."><button title="Remove todas as substituições do relógio e dos parâmetros do modo dev." @click="resetOverrides">Restaurar substituições do modo dev</button></UiTooltip><UiTooltip text="Define a data de plantio como a data atual do relógio da aplicação."><button title="Define a data de plantio como a data atual do relógio da aplicação." @click="setPlantedAt(clockDate || calendarDateKey(new Date()))" :disabled="!isActive">Definir plantio na data da aplicação</button></UiTooltip></div><h3 class="dev-subheading">Zona de risco</h3><div class="dev-actions"><UiTooltip text="Exclui somente o evento de cuidado mais recente do plantio."><button :disabled="!contextPlanting" title="Exclui somente o evento de cuidado mais recente do plantio." @click="databaseAction('delete-last-event')">Excluir último evento</button></UiTooltip><UiTooltip text="Exclui todos os eventos de cuidado do plantio selecionado."><button :disabled="!contextPlanting" title="Exclui todos os eventos de cuidado do plantio selecionado." @click="databaseAction('clear-events')">Limpar eventos de cuidado</button></UiTooltip><UiTooltip text="Limpa os eventos e reabre o plantio selecionado a partir de agora."><button :disabled="!contextPlanting" class="dev-danger-button" title="Limpa os eventos e reabre o plantio selecionado a partir de agora." @click="databaseAction('reset-planting')">Restaurar plantio selecionado</button></UiTooltip><UiTooltip text="Exclui o plantio da célula selecionada e deixa a célula livre."><button :disabled="!contextPlanting" class="dev-danger-button" title="Exclui o plantio da célula selecionada e deixa a célula livre." @click="databaseAction('clear-plot')">Esvaziar célula selecionada</button></UiTooltip><UiTooltip text="Exclui todos os plantios de todas as células da horta selecionada."><button :disabled="!selectedGardenId" class="dev-danger-button" title="Exclui todos os plantios de todas as células da horta selecionada." @click="databaseAction('reset-garden')">Resetar horta</button></UiTooltip></div></div>
+        <div v-else class="dev-raw"><div class="dev-raw-heading"><h3>JSON do inspetor</h3><UiTooltip text="Copia o estado bruto do inspetor para a área de transferência."><button title="Copia o estado bruto do inspetor para a área de transferência." @click="copyRaw">Copiar JSON</button></UiTooltip></div><pre>{{ rawJson }}</pre></div>
       </div>
     </div>
     <UiDialog :open="Boolean(pendingDatabaseAction)" title="Confirmar operação" description="Esta ação altera dados persistidos." @update:open="pendingDatabaseAction = $event ? pendingDatabaseAction : null">

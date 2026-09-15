@@ -117,7 +117,7 @@ O painel inferior possui as abas `State`, `Time`, `Parameters`, `Events`, `Scena
 - alterar a data do plantio;
 - limpar eventos, células, plantios ou uma horta.
 
-Os endpoints `/api/dev/*` respondem `404` quando o modo não está habilitado. As operações da aba `Database` podem alterar ou apagar dados persistidos; não habilite esse modo em produção.
+Os endpoints `/api/dev/*` respondem `404` quando o modo não está habilitado. As operações da aba `Banco de dados` podem alterar ou apagar dados persistidos; não habilite esse modo em produção.
 
 ## Arquitetura
 
@@ -128,7 +128,7 @@ Nuxt
 ├── composables/            estado compartilhado e notificações
 ├── server/api/             API Nitro para hortas, plantios, eventos e tarefas
 ├── server/domain/          regras puras de cálculo do ciclo do cultivo
-├── server/utils/           enriquecimento de plantios, erros HTTP e Dev Mode
+├── server/utils/           enriquecimento de plantios, erros HTTP e modo dev
 ├── db/                     schema PostgreSQL, migrações SQL e seed
 └── utils/                  datas e regras de apresentação compartilhadas
 ```
